@@ -2,6 +2,23 @@ import pygame
 import os
 from pygame.draw import *
 from win32api import GetSystemMetrics
+from ctypes import *
+
+user32 = windll.user32
+
+# Определяем язык ввода
+hwnd = user32.GetForegroundWindow()
+threadID = user32.GetWindowThreadProcessId(hwnd, None)
+StartLang = user32.GetKeyboardLayout(threadID)
+# print(StartLang)
+# 68748313
+# 67699721
+
+
+def get_lang():
+    return 'ru' if user32.GetKeyboardLayout(threadID) == 68748313 else 'eng'
+
+
 # Эти строки мазахизма - русская раскладка
 rus_text = {'`': 'ё', 'q': 'й', 'w': 'ц', 'e': 'у', 'r': 'к', 't': 'е', 'y': 'н', 'u': 'г',
             'i': 'ш', 'o': 'щ', 'p': 'з', '[': 'х', ']': 'ъ', 'a': 'ф', 's': 'ы', 'd': 'в',
@@ -11,6 +28,8 @@ rus_text = {'`': 'ё', 'q': 'й', 'w': 'ц', 'e': 'у', 'r': 'к', 't': 'е', 'y
 good_symbols = ['`', 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', 'a', 's', 'd', 'f',
                 'g', 'h', 'j', 'k', 'l', ';', "'", 'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '0',
                 '1', '2', '3', '4', '5', '6', '7', '8', '9']
+
+
 
 
 def load_image(name):
@@ -293,10 +312,7 @@ class TextWidget(Widget):
 
     def get_normal_text(self):
         """Эта функция возвращает текст для вывода"""
-        if len(self.text) <= 20:
-            return self.text
-        else:
-            return self.text[len(self.text) - 20:]
+        return self.text
 
     def remove_text(self):
         """Эта функция удаляет весь текст из запроса"""
@@ -310,7 +326,8 @@ class TextWidget(Widget):
         """Обновление текстового виджета"""
         screen = args[0]
         image = Smooth((0, 0), size_screen.get_size(0.3, 0.05), 20, (200, 200, 200)).generate_smooth()
-        image.blit(TextBox(size_screen.get_size(0.3, 0.035)[1], self.get_normal_text()).get_image(), [10, 0])
+        text = TextBox(size_screen.get_size(0.3, 0.035)[1], self.get_normal_text()).get_image()
+        image.blit(text, [10, 0], ((text.get_width() - size_screen.get_size(0.24, 0)[0], 0), size_screen.get_size(0.24, 0.05)))
         self.image = image
         if self.get_active():
             # Если виджет активен, то мы делаем проверку на нажатие в любой другой точке программы, и делаем
