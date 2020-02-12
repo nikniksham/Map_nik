@@ -729,12 +729,13 @@ class Button(Widget):
     def get_pressed(self):
         return self.pressed
 
-    def set_pressed(self, pos=pygame.mouse.get_pos()):
-        if not self.push:
-            if pygame.mouse.get_pressed()[0] == 1:
-                self.pressed = bool(self.rect.collidepoint(pos))
-        else:
-            self.pressed = pygame.mouse.get_pressed()[0] == 1 and self.rect.collidepoint(pos)
+    def set_pressed(self, event):
+        if event.type == pygame.MOUSEBUTTONUP:
+            if not self.push:
+                if event.button == 1:
+                    self.pressed = bool(self.rect.collidepoint(event.pos))
+            else:
+                self.pressed = event.button == 1 and self.rect.collidepoint(event.pos)
 
     def get_surface(self):
         # print(self.active)
@@ -746,7 +747,7 @@ class Button(Widget):
     def update(self, event):
         """Обновление стандартной кнопки"""
         if event.type == pygame.MOUSEBUTTONUP:
-            self.set_pressed()
+            self.set_pressed(event)
             if self.get_pressed():
                 self.set_image(self.images_orig[self.pressed])
                 self.action(self)
@@ -767,6 +768,7 @@ class TextWidget(Button):
 
     def write_text(self, keys):
         """Функция написания текста в виджете TextWidget"""
+        # print(keys)
         # Получение имени клавиши, если в программе выбран язык - английский, если выбран русский, то
         # подключается словарь "мазахиста"
         for key in keys:
@@ -803,19 +805,18 @@ class TextWidget(Button):
 
     def update(self, *args):
         """Обновление текстового виджета"""
+        event = args[0]
         self.tick += 1
         if self.tick >= 7:
             size_screen.set_size(self.app.size_screen[0], self.app.size_screen[1])
-            event = args[0]
             image = Smooth((0, 0), size_screen.get_size(0.3, 0.05), int(size_screen.get_size(0.3, 0.015)[1]),
                            (200, 200, 200)).generate_smooth()
             text = TextBox(size_screen.get_size(0.3, 0.035)[1], self.get_normal_text()).get_image()
             image.blit(text, [10, 0], ((text.get_width() - size_screen.get_size(0.24, 0)[0], 0),
                                        size_screen.get_size(0.24, 0.05)))
-            if event.type == 'buttons':
-                if self.get_pressed():
-                    self.tick = 0
-                    self.write_text(self.app.pressed_key)
-            self.set_pressed(pygame.mouse.get_pos())
+            if event.type == 'buttons' and self.get_pressed():
+                self.tick = 0
+                self.write_text(self.app.pressed_key)
             self.image = image
             self.set_image(self.image)
+        self.set_pressed(event)
