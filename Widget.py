@@ -386,6 +386,7 @@ class Application:
                     width, height = event.w, event.h
                     self.set_screen((width, height), self.get_full_screen())
                     for widget in self.get_widgets():
+                        print(2)
                         widget.set_position(width, height)
                 if event.type == pygame.MOUSEMOTION:
                     self.set_active_widgets(event)
@@ -571,6 +572,7 @@ class Widget:
     # пересчитать позицию
     def set_position(self, w, h):
         w_, h_ = self.coord
+        # self.image = scale_to(self.image_orig, (w, h))
         if w_ < 0:
             self.rect.right = w + w_
         else:
