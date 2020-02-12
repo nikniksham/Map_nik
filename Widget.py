@@ -726,6 +726,9 @@ class Button(Widget):
         super().__init__(self.images[0], coord)
         self.set_image(check_image(self.images[0]))
 
+    def get_active(self):
+        return self.active or self.pressed
+
     def get_pressed(self):
         return self.pressed
 
@@ -765,6 +768,9 @@ class TextWidget(Button):
         self.tick = 0
         self.text = ''
         super().__init__([self.image] * 2, self.write_text, coord)
+
+    def get_surface(self):
+        return self.image
 
     def write_text(self, keys):
         """Функция написания текста в виджете TextWidget"""
@@ -817,7 +823,6 @@ class TextWidget(Button):
             if event.type == 'buttons' and self.get_pressed():
                 self.tick = 0
                 self.write_text(self.app.pressed_key)
-            print(self.text)
             self.set_image(image)
-            pygame.image.save(image, 'test.jpg')
+            # pygame.image.save(image, 'test.jpg')
         self.set_pressed(event)
