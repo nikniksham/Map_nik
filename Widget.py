@@ -817,6 +817,7 @@ class TextWidget(Button):
             if event.type == 'buttons' and self.get_pressed():
                 self.tick = 0
                 self.write_text(self.app.pressed_key)
-            self.image = image
-            self.set_image(self.image)
+            print(self.text)
+            self.set_image(image)
+            pygame.image.save(image, 'test.jpg')
         self.set_pressed(event)
