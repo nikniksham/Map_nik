@@ -211,6 +211,218 @@ class Event:
         self.type = a
 
 
+class ThreadApp:
+    pass
+
+
+class Widget:
+    def __init__(self, surfaces, coord, active=False, is_zooming=False, zoom=1, max_zoom=1, min_zoom=0.15,
+                 is_scrolling_x=False, is_scrolling_y=False, is_scroll_line_x=False, is_scroll_line_y=False, scroll_x=0,
+                 scroll_y=0, size=None, stock=True):        # размер экрана
+        self.size = size
+        # зум
+        self.zoom = zoom
+        self.stock = stock
+        # скролл по y
+        self.scroll_y = scroll_y
+        # скролл по x
+        self.scroll_x = scroll_x
+        # скролимый по x
+        self.is_scrolling_x = is_scrolling_x
+        # скролимый по x иил нет
+        self.is_scrolling_y = is_scrolling_y
+        # программа
+        self.app = None
+        self.start_zoom = zoom
+        # оригинальное изоьражение
+        res_surfaces = []
+        if type(surfaces) == str:
+            res_surfaces.append(load_image(surfaces).copy())
+        elif type(surfaces) == Surface:
+            res_surfaces = [surfaces]
+        else:
+            for surface in surfaces:
+                if type(surface) == str:
+                    res_surfaces.append(load_image(surface).copy())
+                else:
+                    res_surfaces.append(surface)
+        self.images_orig = res_surfaces[:]
+        self.set_image(self.images_orig[0])
+        # рект
+        self.rect = self.image.get_rect()
+        # коорданиаты
+        self.coord = coord
+        self.rect.x, self.rect.y = coord
+        # активени или нет
+        self.active = active
+        # зумируемый
+        self.is_zooming = is_zooming
+        self.min_zoom = min_zoom
+        self.max_zoom = max_zoom
+        # есть скрол лента по x или нет
+        self.is_scroll_line_x = is_scroll_line_x and is_scrolling_x
+        # есть скрол лента по y или нет
+        self.is_scroll_line_y = is_scroll_line_y and is_scrolling_y
+
+    def set_image(self, image):
+        self.image_orig = image
+        self.image = self.image_orig
+        if self.size is not None:
+            self.image = scale_to(self.image, self.size)
+        if self.app is not None:
+            self.set_position(self.app.get_width(), self.app.get_height())
+        if self.stock:
+            self.zoom = self.start_zoom
+        if self.zoom != 1:
+            self.set_zoom(zoom=self.zoom)
+
+    # пересчитать позицию
+    def set_position(self, w, h):
+        w_, h_ = self.coord
+        # self.image = scale_to(self.image_orig, (w, h))
+        if w_ < 0:
+            self.rect.right = w + w_
+        else:
+            self.rect.x = w_
+        if h_ < 0:
+            self.rect.bottom = h + h_
+        else:
+            self.rect.y = h_
+
+    # используется в приложении или нет
+    def in_application(self):
+        return True if self.app is not None else False
+
+    # задать приложение в котором используется
+    def set_application(self, app):
+        self.app = app
+
+    def get_application(self):
+        return self.app
+
+    # получить зумиреумый
+    def get_is_zooming(self):
+        return self.is_zooming
+
+    # получить зум
+    def get_zoom(self):
+        # получить зум
+        if self.is_zooming:
+            return self.zoom
+        return 1
+
+    def zoom_update(self, event):
+        if self.rect.collidepoint(event.pos):
+            if event.button == 5:
+                self.zoom += self.zoom * 0.1
+                if self.zoom > self.max_zoom:
+                    self.zoom = self.max_zoom
+            elif event.button == 4:
+                self.zoom -= self.zoom * 0.1
+                if self.zoom < self.min_zoom:
+                    self.zoom = self.min_zoom
+            self.set_zoom(self.zoom)
+
+    def set_zoom(self, zoom):
+        w = self.image_orig.get_width() * zoom
+        h = self.image_orig.get_height() * zoom
+        w_, h_ = self.image_orig.get_size()
+        scroll_x = -self.scroll_x if self.is_scrolling_x else -((w_ - w) / 2)
+        scroll_y = -self.scroll_y if self.is_scrolling_y else -((h_ - h) / 2)
+        self.image = Surface((w, h))
+        self.image.blit(self.image_orig, (scroll_x, scroll_y))
+        self.image = scale(self.image, (self.image_orig.get_width(), self.image_orig.get_height()))
+        if self.size is not None:
+            self.image = scale_to(self.image, self.size)
+        self.rect = self.image.get_rect()
+        if self.app is not None:
+            self.set_position(self.app.get_width(), self.app.get_height())
+
+    # получить скролимый по x
+    def get_is_scrolling_x(self):
+        return self.is_scrolling_x
+
+    # получить скролимый по y
+    def get_is_scrolling_y(self):
+        return self.is_scrolling_y
+
+    # получить скрол по x
+    def get_scroll_x(self):
+        # скрол по x если нельзя, то return False
+        if self.is_scrolling_x:
+            return self.scroll_x
+        return False
+
+    # полчучить скрол по y
+    def get_scroll_y(self):
+        # скрол по y если нельзя, то return False
+        if self.is_scrolling_y:
+            return self.scroll_y
+        return False
+
+    # проскролить по x
+    def set_scroll_x(self, add_num):
+        # добавить скрол по x, иначе return False
+        if self.is_scrolling_x:
+            self.scroll_x += add_num
+            return True
+        return False
+
+    # проскролить по y
+    def set_scroll_y(self, add_num):
+        # добавить скрол по y, иначе return False
+        if self.is_scrolling_x:
+            self.scroll_x += add_num
+            return True
+        return False
+
+    # обновить виджет
+    def update(self, event):
+        pass
+
+    # получить активен ли виджет
+    def get_active(self):
+        return self.active
+
+    # устнавить активным виджет
+    def set_active(self, pos):
+        self.active = self.rect.collidepoint(pos)
+
+    # получить эзображение
+    def get_surface(self):
+        return self.image
+
+    # получить координаты
+    def get_coord(self):
+        return self.rect.x, self.rect.y
+
+    # поллучить Rect
+    def get_rect(self):
+        return self.rect
+
+
+class AnimationWidgets(Widget):
+    def __init__(self, surfaces, coord, sec, active=False, is_zooming=False, zoom=1, max_zoom=1, min_zoom=0.15,
+                 is_scrolling_x=False, is_scrolling_y=False, is_scroll_line_x=False, is_scroll_line_y=False, scroll_x=0,
+                 scroll_y=0):
+        super().__init__(surfaces, coord, active, is_zooming, zoom, max_zoom, min_zoom, is_scrolling_x, is_scrolling_y,
+                         is_scroll_line_x, is_scroll_line_y, scroll_x, scroll_y)
+        self.sec = sec
+        self.tick = 0
+        self.index = 0
+
+    def get_active(self):
+        return self.active
+
+    def update(self, FPS):
+        self.tick += 1 / FPS
+        if self.tick >= self.sec:
+            self.index += 1
+            self.index %= len(self.images_orig)
+            self.set_image(self.images_orig[self.index])
+            self.tick = 0
+
+
 class Application:
     # создание экрана
     def set_screen(self, size, full_screen=False):
@@ -578,211 +790,3 @@ class Application:
     def get_pressed_key(self):
         """получить нажатые кнопки клавиатуры"""
         return self.pressed_key
-
-
-class Widget:
-    def __init__(self, surfaces, coord, active=False, is_zooming=False, zoom=1, max_zoom=1, min_zoom=0.15,
-                 is_scrolling_x=False, is_scrolling_y=False, is_scroll_line_x=False, is_scroll_line_y=False, scroll_x=0,
-                 scroll_y=0, size=None, stock=True):        # размер экрана
-        self.size = size
-        # зум
-        self.zoom = zoom
-        self.stock = stock
-        # скролл по y
-        self.scroll_y = scroll_y
-        # скролл по x
-        self.scroll_x = scroll_x
-        # скролимый по x
-        self.is_scrolling_x = is_scrolling_x
-        # скролимый по x иил нет
-        self.is_scrolling_y = is_scrolling_y
-        # программа
-        self.app = None
-        self.start_zoom = zoom
-        # оригинальное изоьражение
-        res_surfaces = []
-        if type(surfaces) == str:
-            res_surfaces.append(load_image(surfaces).copy())
-        elif type(surfaces) == Surface:
-            res_surfaces = [surfaces]
-        else:
-            for surface in surfaces:
-                if type(surface) == str:
-                    res_surfaces.append(load_image(surface).copy())
-                else:
-                    res_surfaces.append(surface)
-        self.images_orig = res_surfaces[:]
-        self.set_image(self.images_orig[0])
-        # рект
-        self.rect = self.image.get_rect()
-        # коорданиаты
-        self.coord = coord
-        self.rect.x, self.rect.y = coord
-        # активени или нет
-        self.active = active
-        # зумируемый
-        self.is_zooming = is_zooming
-        self.min_zoom = min_zoom
-        self.max_zoom = max_zoom
-        # есть скрол лента по x или нет
-        self.is_scroll_line_x = is_scroll_line_x and is_scrolling_x
-        # есть скрол лента по y или нет
-        self.is_scroll_line_y = is_scroll_line_y and is_scrolling_y
-
-    def set_image(self, image):
-        self.image_orig = image
-        self.image = self.image_orig
-        if self.size is not None:
-            self.image = scale_to(self.image, self.size)
-        if self.app is not None:
-            self.set_position(self.app.get_width(), self.app.get_height())
-        if self.stock:
-            self.zoom = self.start_zoom
-        if self.zoom != 1:
-            self.set_zoom(zoom=self.zoom)
-
-    # пересчитать позицию
-    def set_position(self, w, h):
-        w_, h_ = self.coord
-        # self.image = scale_to(self.image_orig, (w, h))
-        if w_ < 0:
-            self.rect.right = w + w_
-        else:
-            self.rect.x = w_
-        if h_ < 0:
-            self.rect.bottom = h + h_
-        else:
-            self.rect.y = h_
-
-    # используется в приложении или нет
-    def in_application(self):
-        return True if self.app is not None else False
-
-    # задать приложение в котором используется
-    def set_application(self, app):
-        self.app = app
-
-    def get_application(self):
-        return self.app
-
-    # получить зумиреумый
-    def get_is_zooming(self):
-        return self.is_zooming
-
-    # получить зум
-    def get_zoom(self):
-        # получить зум
-        if self.is_zooming:
-            return self.zoom
-        return 1
-
-    def zoom_update(self, event):
-        if self.rect.collidepoint(event.pos):
-            if event.button == 5:
-                self.zoom += self.zoom * 0.1
-                if self.zoom > self.max_zoom:
-                    self.zoom = self.max_zoom
-            elif event.button == 4:
-                self.zoom -= self.zoom * 0.1
-                if self.zoom < self.min_zoom:
-                    self.zoom = self.min_zoom
-            self.set_zoom(self.zoom)
-
-    def set_zoom(self, zoom):
-        w = self.image_orig.get_width() * zoom
-        h = self.image_orig.get_height() * zoom
-        w_, h_ = self.image_orig.get_size()
-        scroll_x = -self.scroll_x if self.is_scrolling_x else -((w_ - w) / 2)
-        scroll_y = -self.scroll_y if self.is_scrolling_y else -((h_ - h) / 2)
-        self.image = Surface((w, h))
-        self.image.blit(self.image_orig, (scroll_x, scroll_y))
-        self.image = scale(self.image, (self.image_orig.get_width(), self.image_orig.get_height()))
-        if self.size is not None:
-            self.image = scale_to(self.image, self.size)
-        self.rect = self.image.get_rect()
-        if self.app is not None:
-            self.set_position(self.app.get_width(), self.app.get_height())
-
-    # получить скролимый по x
-    def get_is_scrolling_x(self):
-        return self.is_scrolling_x
-
-    # получить скролимый по y
-    def get_is_scrolling_y(self):
-        return self.is_scrolling_y
-
-    # получить скрол по x
-    def get_scroll_x(self):
-        # скрол по x если нельзя, то return False
-        if self.is_scrolling_x:
-            return self.scroll_x
-        return False
-
-    # полчучить скрол по y
-    def get_scroll_y(self):
-        # скрол по y если нельзя, то return False
-        if self.is_scrolling_y:
-            return self.scroll_y
-        return False
-
-    # проскролить по x
-    def set_scroll_x(self, add_num):
-        # добавить скрол по x, иначе return False
-        if self.is_scrolling_x:
-            self.scroll_x += add_num
-            return True
-        return False
-
-    # проскролить по y
-    def set_scroll_y(self, add_num):
-        # добавить скрол по y, иначе return False
-        if self.is_scrolling_x:
-            self.scroll_x += add_num
-            return True
-        return False
-
-    # обновить виджет
-    def update(self, event):
-        pass
-
-    # получить активен ли виджет
-    def get_active(self):
-        return self.active
-
-    # устнавить активным виджет
-    def set_active(self, pos):
-        self.active = self.rect.collidepoint(pos)
-
-    # получить эзображение
-    def get_surface(self):
-        return self.image
-
-    # получить координаты
-    def get_coord(self):
-        return self.rect.x, self.rect.y
-
-    # поллучить Rect
-    def get_rect(self):
-        return self.rect
-
-
-class AnimationWidgets(Widget):
-    def __init__(self, surfaces, coord, sec, active=False, is_zooming=False, zoom=1, max_zoom=1, min_zoom=0.15,
-                 is_scrolling_x=False, is_scrolling_y=False, is_scroll_line_x=False, is_scroll_line_y=False, scroll_x=0,
-                 scroll_y=0):
-        super().__init__(surfaces, coord, active, is_zooming, zoom, max_zoom, min_zoom, is_scrolling_x, is_scrolling_y,
-                         is_scroll_line_x, is_scroll_line_y, scroll_x, scroll_y)
-        self.sec = sec
-        self.tick = 0
-        self.index = 0
-
-    def get_active(self):
-        return self.active
-
-    def update(self, FPS):
-        self.tick += 1 / FPS
-        if self.tick >= self.sec:
-            self.index += 1
-            self.index %= len(self.images_orig)
-            self.set_image(self.images_orig[self.index])
-            self.tick = 0

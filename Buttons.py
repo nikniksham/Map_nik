@@ -22,15 +22,16 @@ class Button(Widget):
     def set_pressed(self, event):
         if event.type == pygame.MOUSEBUTTONUP:
             if not self.toggle:
-                if self.pressed:
-                    self.pressed = not self.pressed
-                else:
-                    self.pressed = event.button == 1 and self.rect.collidepoint(event.pos)
+                self.pressed = event.button == 1 and self.rect.collidepoint(event.pos)
             else:
                 if self.pressed and self.rect.collidepoint(event.pos):
                     self.pressed = False
                 else:
                     self.pressed = event.button == 1
+            return
+        if not self.toggle:
+            if self.pressed:
+                self.pressed = not self.pressed
 
     def get_surface(self):
         if not self.pressed:
@@ -48,7 +49,7 @@ class Button(Widget):
             if self.get_pressed():
                 self.set_image(self.images[2])
                 if self.action is not None:
-                    self.action(self)
+                    self.action()
 
 
 class TextWidget(Button):
@@ -112,6 +113,10 @@ class TextWidget(Button):
         """Эта функция задаёт текст из переменной text"""
         self.text = text
 
+    def delete_text(self):
+        self.text = ''
+        print(self.text)
+
     def update(self, *args):
         """Обновление текстового виджета"""
         event = args[0]
@@ -127,5 +132,8 @@ class TextWidget(Button):
             self.len_text = text.get_width()
             image.blit(text, [10, 0], ((text.get_width() - size_screen.get_size(0.24, 0)[0], 0),
                                        size_screen.get_size(0.24, 0.05)))
+            if image.get_width() != self.image.get_width() or image.get_height() != self.image.get_height():
+                self.image = image
+                self.rect = self.image.get_rect()
             self.set_image(image)
         self.set_pressed(event)
