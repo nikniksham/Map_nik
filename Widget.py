@@ -2,6 +2,7 @@ from pygame import Surface
 from pygame.transform import *
 import pygame
 import os
+from threading import Thread
 from pygame.draw import *
 from ctypes import *
 # Импортируем всё необходимое
@@ -238,6 +239,8 @@ class Application:
         self.audios = []
         # события функции
         self.events = []
+        # потоки
+        self.threads = []
         # анимационные виджеты
         self.animations = []
         # часы для граничения FPS
@@ -254,10 +257,13 @@ class Application:
 
     # получить FPS
     def get_fps(self):
+        """получить количество кадров в секунду"""
         return self.FPS
 
     # устатвить FPS 0 - неограничено
-    def set_fps(self, count_fps):
+    def set_fps(self, count_fps: int):
+        """установить количество кадров в секунду
+        count_fps - желаемок количество fps"""
         # возвращает True если установилость, False если не установилось
         if count_fps >= 0:
             self.FPS = count_fps
@@ -266,6 +272,9 @@ class Application:
 
     # получить виджеты
     def get_widgets(self, layer=None, reverse=False):
+        """получить виджеты
+        layer - слой с которого хотите получить виджеты по умолчанию, None - все
+        reverse - получить в обратной последовательности"""
         # получить виджеты с ключом слой
         if layer is not None:
             return self.widgets[layer]
@@ -277,7 +286,10 @@ class Application:
             return res
 
     # добавить виджеты
-    def add_widget(self, widget, layer=1):
+    def add_widget(self, widget: Widget, layer=1):
+        """добавить виджет
+        widget - виджет которй хотите добавить
+        layer - слой на который хотите добавить"""
         # добавить виджет на экран на слой=layer если не получается то return False
         if issubclass(type(widget), Widget):
             widget.set_application(self)
@@ -290,15 +302,22 @@ class Application:
             return True
         return False
 
-    def remove_widget(self, widget):
+    def remove_widget(self, widget: Widget):
+        """удалить виджет из приложения
+        widget - виджет который хотите удалить"""
+        good = False
         for layer in self.get_layers():
             if widget in self.widgets[layer]:
                 self.widgets[layer].remove(widget)
-                return True
-        return False
+                good = True
+                break
+        if not good:
+            raise Exception(f"widget not in widgets")
 
     # получить слои
     def get_layers(self):
+        """получить количество слоёв
+        sort - отсортированых"""
         # получить список слоёв
         res = list(self.widgets.keys())
         res.sort()
@@ -306,48 +325,73 @@ class Application:
 
     # добавить ивент
     def add_event(self, event):
+        """добавить функцию которая при вызове не принимает параметры"""
         # добавляем событие выполняется каждую итерацию
         if event not in self.events:
             self.events.append(event)
 
     def remove_event(self, event):
+        """удалить функцию из списка функций"""
         if event in self.events:
             self.events.remove(event)
             return True
         return False
 
+    def add_thread(self, thread):
+        """добавить поток"""
+        if issubclass(type(thread), ThreadApp):
+            self.threads.append(thread)
+        else:
+            raise Exception(f"ThreadErr: thread is not is subclass ThreadApp")
+
+    def remove(self, thread):
+        """удалить поток"""
+        if thread in self.threads:
+            self.threads.remove(thread)
+        else:
+            raise Exception(f"thread not in application threads")
+
     # получить размер экрана
     def get_size_screen(self):
+        """получить размер экрана"""
         # получить размер экрана
         return self.size_screen
 
     def get_width(self):
+        """получить ширину экрана"""
         # получить ширину экрана
         return self.widht
 
     def get_height(self):
+        """получить высоту экрана"""
         # получить высоту экрана
         return self.height
 
     def get_full_screen(self):
+        """получить режим экрана"""
         # получить развёрнуто на полный экран или нет
         return self.full_screen
 
     def quit(self):
+        """функция которая выполняется при закрытии приложения"""
         # выполняется при закрытии приложения
         pass
 
     def load_mouse_image(self, file):
+        """загрузить изображение для мыши"""
         image = check_image(file, 'mouse')
         self.mouse_images.append(image)
 
     def set_mouse_image(self, index):
+        """задать изображение для мыши
+        index - номер изображения в списке считая с 0"""
         # установить картинку мыши из списка картинок мыши
         pygame.mouse.set_visible(False)
         self.mouse_image = self.mouse_images[index]
         self.mouse_rect = self.mouse_image.get_rect()
 
     def set_mouse_normal(self):
+        """задать мышь по умолчанию от OC"""
         # вернуть видимость мыши
         pygame.mouse.set_visible(True)
         self.mouse_image = None
@@ -357,18 +401,26 @@ class Application:
     # внутреняя логика
     #
     def draw_mouse(self):
+        """не лезь
+        отрисовываем мышь"""
         # отрисовка мыши
         if self.mouse_image is not None:
             self.mouse_rect.x, self.mouse_rect.y = pygame.mouse.get_pos()
             self.screen.blit(self.mouse_image, self.mouse_rect)
 
     def update_screen(self, width, height):
+        """не лезь
+        обновляем виджеты
+        width - ширина
+        height - высота"""
         self.set_screen((width, height), self.get_full_screen())
         for widget in self.get_widgets():
             widget.set_position(width, height)
 
     # main loop
     def run(self):
+        """не лезь
+        основной цикл"""
         # основной цикл
         while self.running:
             if len(self.pressed_key) != 0:
@@ -426,6 +478,9 @@ class Application:
 
     # отрисовка экрана
     def render(self, widget):
+        """не лезь
+        отрисовка виджета
+        widget - виджет который надо отрисовать"""
         if issubclass(type(widget), AnimationWidgets):
             if self.FPS != 0:
                 widget.update(self.FPS)
@@ -437,6 +492,8 @@ class Application:
 
     # обработчик событий мыши
     def set_active_widgets(self, event):
+        """не лезь
+        задать виджет кативным"""
         pos = event.pos
         good = False
         for widget in self.get_widgets(reverse=True):
@@ -448,6 +505,8 @@ class Application:
                     good = True
 
     def mouse_key_up_event(self, event):
+        """не лезь
+        обработка событий мыши"""
         # asd
         if event.button == 1:
             self.on_click(event)
@@ -456,6 +515,8 @@ class Application:
 
     # обработчик всех событий мыши кроме нажатия левой кнопкой мыши
     def mouse_event(self, event):
+        """не лезь
+        обработка всех событий мыши кроме нажатия левой кнопки мыши"""
         if event.button in [4, 5]:
             for widget in self.get_widgets(reverse=True):
                 if widget.get_active() and widget.get_is_zooming():
@@ -467,6 +528,8 @@ class Application:
 
     # обрабатывает нажатие левой кнопкой мыши
     def on_click(self, event):
+        """не лезь
+        обработка нажатия левой кнопки мыши"""
         for widget in self.get_widgets(reverse=True):
             if widget.get_active():
                 # print(widget.rect)
@@ -474,10 +537,13 @@ class Application:
 
     # проверить нажата ли кнопка мыши
     def mouse_pressed(self, number_mouse):
+        """проверить нажата ли эта кнопка мыши
+        number_mouse - номер кнопки мыши"""
         return number_mouse in self.pressed_mouse_button
 
     # получить нажатые кнопки
     def get_pressed_mouse(self):
+        """полуить нажатые кнопки мыши"""
         return self.pressed_mouse_button
 
     #
@@ -485,25 +551,32 @@ class Application:
     #
     # получает события клавиатуры
     def get_key_pressed_event(self, event):
+        """не лезь
+        обновление кнопок клавиатуры"""
         self.key_pressed_event(event)
 
     # события клавиатуры
     def key_pressed_event(self, event):
+        """не лезь
+        обрабатываем события клавиатуры"""
         for widget in self.get_widgets(reverse=True):
             if widget.get_active():
                 widget.update(event)
 
     # проверить нажата ли кнопка клавиатуры
     def key_pressed(self, key):
+        """получить нажата ли эта кнопка"""
         return key in self.pressed_key
 
     def key_up_event(self, event):
+        """не лезь получить нажата ли эта кнопка"""
         for widget in self.get_widgets(reverse=True):
             if widget.get_active():
                 widget.update(event)
 
     # получить список нажатых кнопок
     def get_pressed_key(self):
+        """получить нажатые кнопки клавиатуры"""
         return self.pressed_key
 
 
