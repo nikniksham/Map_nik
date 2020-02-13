@@ -211,8 +211,16 @@ class Event:
         self.type = a
 
 
-class ThreadApp:
-    pass
+class ThreadApp(Thread):
+    def __init__(self, funk, *args):
+        super().__init__(target=funk, args=args)
+        self.app = None
+
+    def add_app(self, app):
+        self.app = app
+
+    def remove_app(self):
+        self.app = None
 
 
 class Widget:
@@ -553,6 +561,7 @@ class Application:
         """добавить поток"""
         if issubclass(type(thread), ThreadApp):
             self.threads.append(thread)
+            thread.add_app(self)
         else:
             raise Exception(f"ThreadErr: thread is not is subclass ThreadApp")
 
@@ -560,6 +569,7 @@ class Application:
         """удалить поток"""
         if thread in self.threads:
             self.threads.remove(thread)
+            thread.remove_app()
         else:
             raise Exception(f"thread not in application threads")
 
