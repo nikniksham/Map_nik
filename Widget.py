@@ -3,7 +3,6 @@ from pygame.transform import *
 import pygame
 import os
 from pygame.draw import *
-from win32api import GetSystemMetrics
 from ctypes import *
 # Импортируем всё необходимое
 
@@ -740,22 +739,31 @@ class Button(Widget):
                 if event.button == 1:
                     self.pressed = bool(self.rect.collidepoint(event.pos))
             else:
-                self.pressed = event.button == 1 and self.rect.collidepoint(event.pos)
+                if self.pressed:
+                    if event.button == 1 and self.rect.collidepoint(event.pos):
+                        self.pressed = False
+                    else:
+                        self.pressed = event.button == 1 and self.rect.collidepoint(event.pos)
+                else:
+                    self.pressed = event.button == 1 and self.rect.collidepoint(event.pos)
 
     def get_surface(self):
-        # print(self.active)
-        if self.active or self.pressed:
-            return self.images[1]
+        if not self.pressed:
+            if self.active:
+                return self.images[1]
+            else:
+                return self.images[0]
         else:
-            return self.images[0]
+            return self.images[2]
 
     def update(self, event):
         """Обновление стандартной кнопки"""
         if event.type == pygame.MOUSEBUTTONUP:
             self.set_pressed(event)
             if self.get_pressed():
-                self.set_image(self.images_orig[self.pressed])
-                self.action(self)
+                self.set_image(self.images[2])
+                if self.action is not None:
+                    self.action(self)
 
 
 class TextWidget(Button):
@@ -768,6 +776,7 @@ class TextWidget(Button):
         self.action = self.write_text
         self.pressed = False
         self.tick = 0
+        self.len_text = 0
         self.text = ''
         super().__init__([self.image] * 2, self.write_text, coord)
 
@@ -784,7 +793,7 @@ class TextWidget(Button):
             if key_name == 'return':
                 self.set_active(False)
                 return
-            if key_name in good_symbols:
+            if key_name in good_symbols and self.len_text <= 16000:
                 # Проверка раскладки
                 if get_lang() == 'eng':
                     self.text += key_name
@@ -793,7 +802,7 @@ class TextWidget(Button):
                         self.text += rus_text[key_name]
                     else:
                         self.text += key_name
-            if key_name == 'space':
+            if key_name == 'space' and self.len_text <= 16000:
                 self.text += ' '
             if key_name == 'backspace':
                 if len(self.text) >= 0:
@@ -816,15 +825,16 @@ class TextWidget(Button):
         event = args[0]
         self.tick += 1
         if self.tick >= 7:
+            if event.type == 'buttons' and self.get_pressed():
+                self.tick = 0
+                self.write_text(self.app.pressed_key)
             size_screen.set_size(self.app.size_screen[0], self.app.size_screen[1])
             image = Smooth((0, 0), size_screen.get_size(0.3, 0.05), int(size_screen.get_size(0.3, 0.015)[1]),
                            (200, 200, 200)).generate_smooth()
             text = TextBox(size_screen.get_size(0.3, 0.035)[1], self.get_normal_text()).get_image()
+            self.len_text = text.get_width()
             image.blit(text, [10, 0], ((text.get_width() - size_screen.get_size(0.24, 0)[0], 0),
                                        size_screen.get_size(0.24, 0.05)))
-            if event.type == 'buttons' and self.get_pressed():
-                self.tick = 0
-                self.write_text(self.app.pressed_key)
             self.set_image(image)
             # pygame.image.save(image, 'test.jpg')
         self.set_pressed(event)
