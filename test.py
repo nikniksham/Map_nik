@@ -3,6 +3,7 @@ from pygame.transform import *
 import pygame
 import os
 from pygame.draw import *
+from win32api import GetSystemMetrics
 from ctypes import *
 # Импортируем всё необходимое
 
@@ -10,8 +11,8 @@ from ctypes import *
 def get_lang():
     user32 = windll.user32
     hwnd = user32.GetForegroundWindow()
-    thread_ID = user32.GetWindowThreadProcessId(hwnd, None)
-    return 'ru' if user32.GetKeyboardLayout(thread_ID) == 68748313 else 'eng'
+    threadID = user32.GetWindowThreadProcessId(hwnd, None)
+    return 'ru' if user32.GetKeyboardLayout(threadID) == 68748313 else 'eng'
 
 
 # Эти строки мазахизма - русская раскладка
@@ -23,9 +24,6 @@ rus_text = {'`': 'ё', 'q': 'й', 'w': 'ц', 'e': 'у', 'r': 'к', 't': 'е', 'y
 good_symbols = ['`', 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', 'a', 's', 'd', 'f',
                 'g', 'h', 'j', 'k', 'l', ';', "'", 'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '0',
                 '1', '2', '3', '4', '5', '6', '7', '8', '9']
-pygame.init()
-# Константы
-FONT_STYLE = 'data/Font/NeogreyMedium.otf'
 
 
 def load_image(name):
@@ -55,13 +53,10 @@ def check_image(image, help_name=None):
 
 class ScreenSize:
     def __init__(self):
-        self.size_screen = [800, 600]
+        self.size_screen = [GetSystemMetrics(0), GetSystemMetrics(1)]
 
     def get_size(self, x, y):
         return [self.size_screen[0] * x, self.size_screen[1] * y]
-
-    def set_size(self, x, y):
-        self.size_screen = [x, y]
 
 
 size_screen = ScreenSize()
@@ -196,6 +191,154 @@ class TextBox(pygame.sprite.Sprite):
         return self.image
 
 
+class Widgets:
+    def __init__(self, screen):
+        """Создаём список, в котором будут кнопки, которые будут обновляться"""
+        self.screen = screen
+        self.widgets = []
+
+    def add_widget(self, widget):
+        """Добавление кнопок в список"""
+        if widget not in self.widgets:
+            self.widgets.append(widget)
+        else:
+            raise Exception('Такая кнопка уже есть в списке обновления')
+
+    def remove_widget(self, widget):
+        """Удаление кнопок из списка"""
+        if widget in self.widgets:
+            self.widgets.remove(widget)
+        else:
+            raise Exception('Такой кнопки нет в списке обновления')
+
+    def get_screen(self):
+        """Возвращение screen"""
+        return self.screen
+
+    def update(self):
+        """Обновление кнопок"""
+        for widget in self.widgets:
+            widget.update(self.screen)
+
+
+class Widget:
+    def __init__(self, image, action, coord):
+        """Дочерний класс всех виджетов, в который передаются 3 обязательных параметра - изображение,
+        действие и координаты соответственно"""
+        self.image = image
+        self.action = action
+        self.active = False
+        self.coord = coord
+        self.rect = self.image.get_rect()
+        self.rect.x, self.rect.y = self.coord
+
+    def set_coord(self, new_coord):
+        """Изменение старых координат на новые"""
+        self.coord = new_coord
+
+    def get_coord(self):
+        """Возвращает координаты"""
+        return self.coord
+
+    def set_image(self, new_image):
+        """Изменяет старое изображение на новое"""
+        self.image = new_image
+
+    def set_action(self, new_action):
+        """Изменяет старое действие на новое"""
+        self.action = new_action
+
+    def get_active(self):
+        """Возращает параметр активности"""
+        return self.active
+
+    def set_active(self, active):
+        """Задаёт активность виджету"""
+        self.active = active
+
+
+class Button(Widget):
+    def __init__(self, image_inactive, image_active, action, coord):
+        """Загрузка картинок - inactive_image, active_image"""
+        self.image_inactive = check_image(image_inactive, 'image_inactive')
+        self.image_active = check_image(image_active, 'image_active')
+        self.action = action
+        super().__init__(self.image_inactive, self.action, coord)
+
+    def update(self, *args):
+        """Обновление стандартной кнопки"""
+
+
+class TextWidget(Widget):
+    def __init__(self, image, coord):
+        if image is None:
+            self.image = Smooth((0, 0), size_screen.get_size(0.3, 0.05), 20, (200, 200, 200)).generate_smooth()
+        else:
+            self.image = check_image(image, 'image_text_widget')
+        self.action = self.write_text
+        self.text = ''
+        super().__init__(self.image, self.action, coord)
+
+    def write_text(self, event, space, backspace):
+        """Функция написания текста в виджете TextWidget"""
+        # Получение имени клавиши, если в программе выбран язык - английский, если выбран русский, то
+        # подключается словарь "мазахиста"
+        if not space and not backspace and event is not None:
+            key_name = pygame.key.name(event.key)
+            if key_name == 'return':
+                self.set_active(False)
+                return
+            if key_name in good_symbols:
+                # Проверка раскладки
+                if get_lang() == 'eng':
+                    self.text += key_name
+                if get_lang() == 'ru':
+                    if key_name in list(rus_text.keys()):
+                        self.text += rus_text[key_name]
+                    else:
+                        self.text += key_name
+        if space:
+            self.text += ' '
+        if backspace:
+            if len(self.text) >= 0:
+                self.text = self.text[:-1]
+
+    def get_normal_text(self):
+        """Эта функция возвращает текст для вывода"""
+        return self.text
+
+    def remove_text(self):
+        """Эта функция удаляет весь текст из запроса"""
+        self.text = ''
+
+    def set_text(self, text):
+        """Эта функция задаёт текст из переменной text"""
+        self.text = text
+
+    def update(self, *args):
+        """Обновление текстового виджета"""
+        screen = args[0]
+        image = Smooth((0, 0), size_screen.get_size(0.3, 0.05), 20, (200, 200, 200)).generate_smooth()
+        text = TextBox(size_screen.get_size(0.3, 0.035)[1], self.get_normal_text()).get_image()
+        image.blit(text, [10, 0], ((text.get_width() - size_screen.get_size(0.24, 0)[0], 0), size_screen.get_size(0.24, 0.05)))
+        self.image = image
+        if self.get_active():
+            # Если виджет активен, то мы делаем проверку на нажатие в любой другой точке программы, и делаем
+            # виджет неактивным, если куда либо нажали ещё
+            if not self.rect.collidepoint(pygame.mouse.get_pos()) and pygame.mouse.get_pressed()[0] == 1:
+                self.set_active(False)
+                return
+            # self.write_text()
+        else:
+            # Если виджет неактивен, то мы делаем проверку по его нажатию, и делаем активным, если на него нажали
+            if self.rect.collidepoint(pygame.mouse.get_pos()) and pygame.mouse.get_pressed()[0] == 1:
+                self.set_active(True)
+        screen.blit(self.image, self.get_coord())
+
+pygame.init()
+FONT_STYLE = 'NeogreyMedium.otf'
+
+
 def scale_to(image, size):
     return scale(image, size)
 
@@ -203,11 +346,6 @@ def scale_to(image, size):
 def create_text(text, size, color):
     font_type = pygame.font.Font(FONT_STYLE, size)
     return font_type.render(text, True, color)
-
-
-class Event:
-    def __init__(self, a):
-        self.type = a
 
 
 class Application:
@@ -304,6 +442,27 @@ class Application:
         res.sort()
         return res
 
+    # получить аудио файлы
+    def get_audios(self):
+        # получить список аудиофайлов
+        return self.audios
+
+    # добавить аудио файлы
+    def add_audio(self, audio):
+        # добавить аудиофайл если не получается, то return False
+        if issubclass(audio, Audio):
+            self.audios.append(audio)
+            return True
+        return False
+
+    # удалить аудиофайлы
+    def remove_audio(self, audio):
+        # удаляем аудиофайл, если не получается, то return False
+        if audio in self.audios:
+            self.audios.remove(audio)
+            return True
+        return False
+
     # добавить ивент
     def add_event(self, event):
         # добавляем событие выполняется каждую итерацию
@@ -338,7 +497,7 @@ class Application:
         pass
 
     def load_mouse_image(self, file):
-        image = check_image(file, 'mouse')
+        image = load_image(file, (255, 255, 255))
         self.mouse_images.append(image)
 
     def set_mouse_image(self, index):
@@ -371,10 +530,6 @@ class Application:
     def run(self):
         # основной цикл
         while self.running:
-            if len(self.pressed_key) != 0:
-                for widget in self.get_widgets(reverse=True):
-                    if widget.get_active():
-                        widget.update(Event('buttons'))
             # обробатываем события
             for event in pygame.event.get():
                 # событие закрытия
@@ -385,7 +540,6 @@ class Application:
                     width, height = event.w, event.h
                     self.set_screen((width, height), self.get_full_screen())
                     for widget in self.get_widgets():
-                        print(2)
                         widget.set_position(width, height)
                 if event.type == pygame.MOUSEMOTION:
                     self.set_active_widgets(event)
@@ -571,7 +725,6 @@ class Widget:
     # пересчитать позицию
     def set_position(self, w, h):
         w_, h_ = self.coord
-        # self.image = scale_to(self.image_orig, (w, h))
         if w_ < 0:
             self.rect.right = w + w_
         else:
@@ -693,6 +846,42 @@ class Widget:
         return self.rect
 
 
+class Audio:
+    pass
+
+
+class Button(Widget):
+    def __init__(self, surfaces, coord, function, active=False, is_zooming=False, zoom=1, max_zoom=1, min_zoom=0.15,
+                 is_scrolling_x=False, is_scrolling_y=False, is_scroll_line_x=False, is_scroll_line_y=False, scroll_x=0,
+                 scroll_y=0, push=False):
+        super().__init__(surfaces, coord, active, is_zooming, zoom, max_zoom, min_zoom, is_scrolling_x, is_scrolling_y,
+                         is_scroll_line_x, is_scroll_line_y, scroll_x, scroll_y)
+        self.pressed = False
+        self.function = function
+        self.push = push
+
+    def set_active(self, pos):
+        self.active = self.rect.collidepoint(pos)
+
+    def get_pressed(self):
+        return self.pressed
+
+    def get_surface(self):
+        # print(self.active)
+        if self.active or self.pressed:
+            return self.images_orig[1]
+        else:
+            return self.images_orig[0]
+
+    def update(self, event):
+        if event.type == pygame.MOUSEBUTTONUP:
+            if event.button == 1 and self.rect.collidepoint(event.pos):
+                if not self.push:
+                    self.pressed = not self.pressed
+                self.set_image(self.images_orig[self.pressed])
+                self.function(self)
+
+
 class AnimationWidgets(Widget):
     def __init__(self, surfaces, coord, sec, active=False, is_zooming=False, zoom=1, max_zoom=1, min_zoom=0.15,
                  is_scrolling_x=False, is_scrolling_y=False, is_scroll_line_x=False, is_scroll_line_y=False, scroll_x=0,
@@ -704,7 +893,7 @@ class AnimationWidgets(Widget):
         self.index = 0
 
     def get_active(self):
-        return self.active
+        return False
 
     def update(self, FPS):
         self.tick += 1 / FPS
@@ -713,3 +902,103 @@ class AnimationWidgets(Widget):
             self.index %= len(self.images_orig)
             self.set_image(self.images_orig[self.index])
             self.tick = 0
+
+
+class ProgressBar(AnimationWidgets):
+    def __init__(self, bar_top, bar_back, coord, from_color=(255, 255, 255), to_color=(255, 255, 255), percentage=0):
+        if type(bar_top) == str:
+            bar_top = load_image(bar_top)
+        if type(bar_back) == str:
+            bar_back = load_image(bar_back)
+        bar_back.blit(bar_top, (0, 0))
+        self.top_bar = bar_top
+        self.back_bar = bar_back
+        self.percentage = percentage
+        self.color_from = from_color
+        self.color_to = to_color
+        self.display = None
+
+        image = bar_back
+        super().__init__(image, coord, 1, True)
+
+    def add_display(self, display):
+        self.display = display
+
+    def update(self, FPS):
+        pass
+
+    def get_color(self, progress=None):
+        if progress is None:
+            progress = self.percentage
+        res_color = []
+        for color_1, color_2 in zip(self.color_from, self.color_to):
+            if progress > 0.5:
+                color_1 = color_1 * (1 - (progress - 0.5) * 2)
+            if progress < 0.5:
+                color_2 = color_2 * (progress * 2)
+            res_color.append(min(255, color_1 + color_2))
+        return res_color
+
+    def update_bar(self, percentage):
+        image = self.back_bar.copy()
+        if percentage > 1:
+            percentage = 1
+        self.percentage = percentage
+        h = self.back_bar.get_height()
+        w = self.back_bar.get_width() * self.percentage
+        # print(w, self.back_bar.get_width())
+        color = self.get_color()
+        for x in range(int((w + 1))):
+            pygame.draw.line(image, color, [x, 0], [x, h])
+        image.blit(self.top_bar, (0, 0))
+        self.set_image(image)
+        if self.display is not None:
+            self.display.update_text(f'{int(self.percentage * 100)}%', color=self.get_color())
+
+
+class Text(Widget):
+    def __init__(self, text, size, coord, color=(255, 255, 255)):
+        text_image = create_text(text, size, color)
+        super().__init__(text_image, coord)
+        self.text, self.font_size, self.font_color = text, size, color
+
+    def get_active(self):
+        return False
+
+    def update_text(self, text=None, size=None, color=None):
+        text = str(self.text if text is None else text)
+        size = self.font_size if size is None else size
+        color = self.font_color if color is None else color
+        font_type = pygame.font.Font(FONT_STYLE, size)
+        text = font_type.render(text, True, color)
+        self.set_image(text)
+
+
+# тест программы
+if __name__ == '__main__':
+    def set_mouse_vizible(then):
+        app = then.get_application()
+        if then.get_pressed():
+            app.set_mouse_normal()
+        else:
+            app.set_mouse_image(0)
+
+
+    test_app = Application((530, 500))
+    widget2 = Button(['name2.png', 'name.png'], (10, 10), set_mouse_vizible, is_zooming=True)
+    widget1 = AnimationWidgets([load_image('1.png', (255, 255, 255)), load_image('2.png', (255, 255, 255)),
+                                load_image('3.png', (255, 255, 255))], (-120, -10), 0.65)
+    lu = Widget('lu.png', (10, 10))
+    lb = Widget('lb.png', (10, -10))
+    ru = Widget('ru.png', (-10, 10))
+    rb = Widget('rb.png', (-10, -10))
+    mouse = 'mouse1.png'
+    test_app.load_mouse_image(mouse)
+    test_app.set_mouse_image(0)
+    test_app.add_widget(widget2)
+    test_app.add_widget(widget1)
+    test_app.add_widget(lu, 0)
+    test_app.add_widget(lb, 0)
+    test_app.add_widget(ru, 0)
+    test_app.add_widget(rb, 0)
+    test_app.run()
