@@ -285,7 +285,7 @@ class Widget:
     def set_image(self, image):
         self.image_orig = image
         self.image = self.image_orig
-        if self.size is not None:
+        if self.size is not None and self.stock:
             self.image = scale_to(self.image, self.size)
         if self.app is not None:
             self.set_position(self.app.get_width(), self.app.get_height())
@@ -352,7 +352,7 @@ class Widget:
         self.image = scale(self.image, (self.image_orig.get_width(), self.image_orig.get_height()))
         if self.size is not None:
             self.image = scale_to(self.image, self.size)
-        self.rect = self.image.get_rect()
+        self.rect.width, self.rect.height = self.image.get_rect()
         if self.app is not None:
             self.set_position(self.app.get_width(), self.app.get_height())
 
@@ -677,6 +677,7 @@ class Application:
                         widget.set_position(width, height)
                 if event.type == pygame.MOUSEMOTION:
                     self.set_active_widgets(event)
+                    self.widget_event(event)
                 # событие нажатия клавиши мыши
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     self.pressed_mouse_button.append(event.button)
@@ -694,7 +695,7 @@ class Application:
                 if event.type == pygame.KEYUP:
                     if event.key in self.pressed_key:
                         self.pressed_key.remove(event.key)
-                    self.key_up_event(event)
+                    self.widget_event(event)
             # обработка функций
             for funk in self.events:
                 funk()
@@ -727,6 +728,11 @@ class Application:
         elif issubclass(type(widget), Widget):
             self.screen.blit(widget.get_surface(), widget.get_rect())
 
+    def widget_event(self, event):
+        for widget in self.get_widgets(reverse=True):
+            if widget.get_active():
+                widget.update(event)
+
     # обработчик событий мыши
     def set_active_widgets(self, event):
         """не лезь
@@ -746,7 +752,7 @@ class Application:
         обработка событий мыши"""
         # asd
         if event.button == 1 and event.type == pygame.MOUSEBUTTONUP:
-            self.on_click(event)
+            self.widget_event(event)
         else:
             self.mouse_event(event)
 
@@ -759,18 +765,7 @@ class Application:
                 if widget.get_active() and widget.get_is_zooming():
                     widget.zoom_update(event)
         else:
-            for widget in self.get_widgets(reverse=True):
-                if widget.get_active():
-                    widget.update(event)
-
-    # обрабатывает нажатие левой кнопкой мыши
-    def on_click(self, event):
-        """не лезь
-        обработка нажатия левой кнопки мыши"""
-        for widget in self.get_widgets(reverse=True):
-            if widget.get_active():
-                # print(widget.rect)
-                widget.update(event)
+            self.widget_event(event)
 
     # проверить нажата ли кнопка мыши
     def mouse_pressed(self, number_mouse):
@@ -790,26 +785,12 @@ class Application:
     def get_key_pressed_event(self, event):
         """не лезь
         обновление кнопок клавиатуры"""
-        self.key_pressed_event(event)
-
-    # события клавиатуры
-    def key_pressed_event(self, event):
-        """не лезь
-        обрабатываем события клавиатуры"""
-        for widget in self.get_widgets(reverse=True):
-            if widget.get_active():
-                widget.update(event)
+        self.widget_event(event)
 
     # проверить нажата ли кнопка клавиатуры
     def key_pressed(self, key):
         """получить нажата ли эта кнопка"""
         return key in self.pressed_key
-
-    def key_up_event(self, event):
-        """не лезь получить нажата ли эта кнопка"""
-        for widget in self.get_widgets(reverse=True):
-            if widget.get_active():
-                widget.update(event)
 
     # получить список нажатых кнопок
     def get_pressed_key(self):

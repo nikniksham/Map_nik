@@ -143,17 +143,30 @@ class Slider(Widget):
         """Кнопка 'Slider'
         Очень полезная вещь, используется для динамичного регулирования параметров
         звука, зума и тд"""
-        self.image = image
+        # изображение
+        self.image_slider = image
+        # координаты чего-то
         self.coord = coord
+        # радиус шарика слайдера
+        self.radius = image.get_width() // 2
+        # координаты кнопки
         self.coord_button = coord
+        # минимальное значение
         self.min_value = min_value
+        # максимальное значение
         self.max_value = max_value
+        # высота слайдера
         self.height_slider = height_slider
+        # ширина слайдера
         self.width_slider = width_slider
-        self.coord_slider = coord
+        # координаты слайдера
+        self.coord_slider = coord[:]
+        # цвет полоски слайдера
         self.color_slider = color_slider
+        # нажат ли слайдер
         self.pressed = False
         super().__init__([image], self.coord, stock=False)
+        self.rect = pygame.Rect(coord, (self.radius * 2, height_slider))
 
     def get_pressed(self):
         """Возвращает информацию - нажата ли кнопка"""
@@ -167,11 +180,15 @@ class Slider(Widget):
         return self.active or self.pressed
 
     def update(self, event):
-        self.set_pressed()
-        if self.get_active():
-            pygame.draw.rect(self.app.screen, self.color_slider, (self.coord, (self.width_slider,
-                                                                  self.height_slider)))
-            print(self.coord_slider[1], pygame.mouse.get_pos()[1], self.coord_slider[1] + self.height_slider)
-            if self.coord_slider[1] <= pygame.mouse.get_pos()[1] <= self.coord_slider[1] + self.height_slider:
-                self.rect.y = pygame.mouse.get_pos()[1]
-            self.app.screen.blit(self.image, self.coord_button)
+        if event.type in [pygame.MOUSEBUTTONDOWN, pygame.MOUSEMOTION] and self.app.mouse_pressed(1):
+            self.set_pressed()
+            if self.get_active():
+                image = pygame.Surface((self.rect.width, self.rect.height))
+                image.set_colorkey((0, 0, 0))
+                if self.rect.y + self.radius <= pygame.mouse.get_pos()[1] <= self.rect.y + self.height_slider - self.radius:
+                    self.coord_slider[1] = pygame.mouse.get_pos()[1] - self.rect.y - self.radius
+                pygame.draw.rect(image, self.color_slider, ((self.radius - self.width_slider // 2, 0), (self.width_slider,
+                                                                                   self.height_slider)))
+                image.blit(self.image_slider, (0, self.coord_slider[1]))
+                self.set_image(image)
+                # print(self.coord_slider[1], pygame.mouse.get_pos()[1], self.coord_slider[1] + self.height_slider, 'gg')
