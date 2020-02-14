@@ -670,7 +670,7 @@ class Application:
                 if event.type == pygame.QUIT:
                     self.running = False
                     return self.quit()
-                if event.type == pygame.VIDEORESIZE:
+                if event.type == pygame.VIDEORESIZE and False:
                     width, height = event.w, event.h
                     self.set_screen((width, height), self.get_full_screen())
                     for widget in self.get_widgets():

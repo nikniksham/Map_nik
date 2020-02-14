@@ -105,16 +105,26 @@ class TextWidget(Button):
         """Эта функция возвращает текст для вывода"""
         return self.text
 
-    def remove_text(self):
-        """Эта функция удаляет весь текст из запроса"""
-        self.text = ''
-
     def set_text(self, text):
         """Эта функция задаёт текст из переменной text"""
         self.text = text
 
     def delete_text(self):
         self.text = ''
+        self.generate_image()
+
+    def generate_image(self):
+        size_screen.set_size(self.app.size_screen[0], self.app.size_screen[1])
+        image = Smooth((0, 0), size_screen.get_size(0.3, 0.05), int(size_screen.get_size(0.3, 0.015)[1]),
+                       (200, 200, 200)).generate_smooth()
+        text = TextBox(size_screen.get_size(0.3, 0.035)[1], self.get_normal_text()).get_image()
+        self.len_text = text.get_width()
+        image.blit(text, [10, 0], ((text.get_width() - size_screen.get_size(0.24, 0)[0], 0),
+                                   size_screen.get_size(0.24, 0.05)))
+        if image.get_width() != self.image.get_width() or image.get_height() != self.image.get_height():
+            self.image = image
+            self.rect = self.image.get_rect()
+        self.set_image(image)
 
     def update(self, *args):
         """Обновление текстового виджета"""
@@ -124,17 +134,7 @@ class TextWidget(Button):
             if event.type == 'buttons' and self.get_pressed() or self.active:
                 self.tick = 0
                 self.write_text(self.app.pressed_key)
-            size_screen.set_size(self.app.size_screen[0], self.app.size_screen[1])
-            image = Smooth((0, 0), size_screen.get_size(0.3, 0.05), int(size_screen.get_size(0.3, 0.015)[1]),
-                           (200, 200, 200)).generate_smooth()
-            text = TextBox(size_screen.get_size(0.3, 0.035)[1], self.get_normal_text()).get_image()
-            self.len_text = text.get_width()
-            image.blit(text, [10, 0], ((text.get_width() - size_screen.get_size(0.24, 0)[0], 0),
-                                       size_screen.get_size(0.24, 0.05)))
-            if image.get_width() != self.image.get_width() or image.get_height() != self.image.get_height():
-                self.image = image
-                self.rect = self.image.get_rect()
-            self.set_image(image)
+            self.generate_image()
         self.set_pressed(event)
 
 
@@ -160,13 +160,14 @@ class Slider(Widget):
         # ширина слайдера
         self.width_slider = width_slider
         # координаты слайдера
-        self.coord_slider = coord[:]
+        self.coord_slider = [0, 0]
         # цвет полоски слайдера
         self.color_slider = color_slider
         # нажат ли слайдер
         self.pressed = False
         super().__init__([image], self.coord, stock=False)
         self.rect = pygame.Rect(coord, (self.radius * 2, height_slider))
+        self.generate_image()
 
     def get_pressed(self):
         """Возвращает информацию - нажата ли кнопка"""
@@ -179,16 +180,19 @@ class Slider(Widget):
     def get_active(self):
         return self.active or self.pressed
 
+    def generate_image(self):
+        image = pygame.Surface((self.rect.width, self.rect.height))
+        image.set_colorkey((0, 0, 0))
+        if self.rect.y + self.radius <= pygame.mouse.get_pos()[1] <= self.rect.y + self.height_slider - self.radius:
+            self.coord_slider[1] = pygame.mouse.get_pos()[1] - self.rect.y - self.radius
+        pygame.draw.rect(image, self.color_slider, ((self.radius - self.width_slider // 2, 0), (self.width_slider,
+                                                                                                self.height_slider)))
+        image.blit(self.image_slider, (0, self.coord_slider[1]))
+        self.set_image(image)
+
     def update(self, event):
         if event.type in [pygame.MOUSEBUTTONDOWN, pygame.MOUSEMOTION] and self.app.mouse_pressed(1):
             self.set_pressed()
             if self.get_active():
-                image = pygame.Surface((self.rect.width, self.rect.height))
-                image.set_colorkey((0, 0, 0))
-                if self.rect.y + self.radius <= pygame.mouse.get_pos()[1] <= self.rect.y + self.height_slider - self.radius:
-                    self.coord_slider[1] = pygame.mouse.get_pos()[1] - self.rect.y - self.radius
-                pygame.draw.rect(image, self.color_slider, ((self.radius - self.width_slider // 2, 0), (self.width_slider,
-                                                                                   self.height_slider)))
-                image.blit(self.image_slider, (0, self.coord_slider[1]))
-                self.set_image(image)
+                self.generate_image()
                 # print(self.coord_slider[1], pygame.mouse.get_pos()[1], self.coord_slider[1] + self.height_slider, 'gg')

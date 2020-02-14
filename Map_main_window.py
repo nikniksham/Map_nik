@@ -5,9 +5,9 @@ import pygame
 
 # Получаем актуальные размеры экрана, и создаём приложение
 # size_screen = (GetSystemMetrics(0), GetSystemMetrics(1))
-size_screen = (800, 600)
+size_screen = (1000, 800)
 pygame.init()
-screen = pygame.display.set_mode(size_screen, pygame.RESIZABLE)
+screen = pygame.display.set_mode(size_screen)
 
 clock = pygame.time.Clock()
 
