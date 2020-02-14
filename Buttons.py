@@ -115,7 +115,6 @@ class TextWidget(Button):
 
     def delete_text(self):
         self.text = ''
-        print(self.text)
 
     def update(self, *args):
         """Обновление текстового виджета"""
@@ -137,3 +136,43 @@ class TextWidget(Button):
                 self.rect = self.image.get_rect()
             self.set_image(image)
         self.set_pressed(event)
+
+
+class Slider(Widget):
+    def __init__(self, image, coord, min_value, max_value, height_slider, width_slider=10, color_slider=(150, 150, 150)):
+        """Кнопка 'Slider'
+        Очень полезная вещь, используется для динамичного регулирования параметров
+        звука, зума и тд"""
+        self.image = image
+        self.coord = coord
+        self.coord_button = coord
+        self.min_value = min_value
+        self.max_value = max_value
+        self.height_slider = height_slider
+        self.width_slider = width_slider
+        self.color_slider = color_slider
+        self.pressed = False
+        super().__init__([image], self.coord)
+
+    def get_pressed(self):
+        """Возвращает информацию - нажата ли кнопка"""
+        return self.pressed
+
+    def set_pressed(self):
+        """Проверка на то, что кнопка активна"""
+        print(23848320480230)
+        self.pressed = pygame.mouse.get_pressed()[0] == 1 and self.rect.collidepoint(pygame.mouse.get_pos())
+
+    def update(self, event):
+        self.set_pressed()
+        print(self.pressed)
+        if self.pressed:
+            print(self.color_slider)
+            self.app.screen.blit(pygame.draw.rect(self.app.screen, self.color_slider, (self.coord, (self.coord[0] +
+                                                  self.width_slider), (self.coord[0] + self.width_slider,
+                                                  self.color_slider[1] + self.height_slider), (self.coord[0],
+                                                                                               self.coord[1] +
+                                                                                               self.width_slider))))
+            if self.color_slider[1] <= pygame.mouse.get_pos()[1] <= self.color_slider[1] + self.height_slider:
+                self.coord[1] = pygame.mouse.get_pos()[1]
+            self.app.screen.blit(self.image, self.coord_button)
