@@ -683,17 +683,18 @@ class Application:
                 if event.type == pygame.MOUSEMOTION:
                     self.set_active_widgets(event)
                 # событие нажатия клавиши мыши
-                if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.type in pygame.MOUSEBUTTONDOWN:
                     self.pressed_mouse_button.append(event.button)
+                    self.mouse_key_event(event)
                 # событие нажатия клавиши клавиатуры
-                if event.type == pygame.KEYDOWN:
+                if event.type in pygame.KEYDOWN:
                     self.pressed_key.append(event.key)
                     self.get_key_pressed_event(event)
                 # событие отжатия клавиши мыши
                 if event.type == pygame.MOUSEBUTTONUP:
                     if event.button in self.pressed_mouse_button:
                         self.pressed_mouse_button.remove(event.button)
-                    self.mouse_key_up_event(event)
+                    self.mouse_key_event(event)
                 # событие отжатия клавиши клавиатуры
                 if event.type == pygame.KEYUP:
                     if event.key in self.pressed_key:
@@ -745,11 +746,11 @@ class Application:
                 if widget.get_active():
                     good = True
 
-    def mouse_key_up_event(self, event):
+    def mouse_key_event(self, event):
         """не лезь
         обработка событий мыши"""
         # asd
-        if event.button == 1:
+        if event.button == 1 and event.type == pygame.MOUSEBUTTONUP:
             self.on_click(event)
         else:
             self.mouse_event(event)
