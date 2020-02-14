@@ -263,10 +263,7 @@ class Widget:
             res_surfaces = [surfaces]
         else:
             for surface in surfaces:
-                if type(surface) == str:
-                    res_surfaces.append(load_image(surface).copy())
-                else:
-                    res_surfaces.append(surface)
+                res_surfaces.append(check_image(surface, 'Widget'))
         self.images_orig = res_surfaces[:]
         self.set_image(self.images_orig[0])
         # рект
@@ -677,12 +674,11 @@ class Application:
                     width, height = event.w, event.h
                     self.set_screen((width, height), self.get_full_screen())
                     for widget in self.get_widgets():
-                        print(2)
                         widget.set_position(width, height)
                 if event.type == pygame.MOUSEMOTION:
                     self.set_active_widgets(event)
                 # событие нажатия клавиши мыши
-                if event.type in pygame.MOUSEBUTTONDOWN:
+                if event.type == pygame.MOUSEBUTTONDOWN:
                     self.pressed_mouse_button.append(event.button)
                     self.mouse_key_event(event)
                 # событие нажатия клавиши клавиатуры
