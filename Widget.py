@@ -148,7 +148,6 @@ class Smooth:
         rect(self.image, self.color, ((self.smooth, 0), (self.rect.width - self.smooth * 2, self.rect.height)))
         return self.image
 
-pygame.image.save(Smooth(pos=(300, 300), size=(100, 100), smooth=50).generate_smooth(), 'gg.png')
 
 class TextBox(pygame.sprite.Sprite):
     """Создаёт текст"""
@@ -679,11 +678,11 @@ class Application:
                 if event.type == pygame.MOUSEMOTION:
                     self.set_active_widgets(event)
                 # событие нажатия клавиши мыши
-                if event.type in pygame.MOUSEBUTTONDOWN:
+                if event.type == pygame.MOUSEBUTTONDOWN:
                     self.pressed_mouse_button.append(event.button)
                     self.mouse_key_event(event)
                 # событие нажатия клавиши клавиатуры
-                if event.type in pygame.KEYDOWN:
+                if event.type == pygame.KEYDOWN:
                     self.pressed_key.append(event.key)
                     self.get_key_pressed_event(event)
                 # событие отжатия клавиши мыши
