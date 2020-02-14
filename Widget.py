@@ -126,26 +126,29 @@ class Smooth:
         self.image.set_colorkey((0, 0, 0))
         if self.test:
             print('Smooth Image')
+            # print(self.rect, self.smooth)
+            # print(self.rect.width - self.smooth)
             print(self.smooth, self.smooth)
-            print(self.rect.right - self.smooth, self.smooth)
-            print(self.smooth, self.rect.bottom - self.smooth)
-            print(self.rect.right - self.smooth, self.rect.bottom - self.smooth)
-            print((0, self.smooth), (self.rect.right, self.rect.height - self.smooth * 2))
-            print((self.smooth, 0), (self.rect.right - self.smooth * 2, self.rect.bottom))
+            print(self.rect.width - self.smooth, self.smooth)
+            print(self.smooth, self.rect.height - self.smooth)
+            print(self.rect.width - self.smooth, self.rect.height - self.smooth)
+            print((0, self.smooth), (self.rect.width, self.rect.height - self.smooth * 2))
+            print((self.smooth, 0), (self.rect.width - self.smooth * 2, self.rect.height))
         # левый верхний круг
         circle(self.image, self.color, (self.smooth, self.smooth), self.smooth)
         # правый верхний круг
-        circle(self.image, self.color, (self.rect.right - self.smooth, self.smooth), self.smooth)
+        circle(self.image, self.color, (self.rect.width - self.smooth, self.smooth), self.smooth)
         # левый нижний круг
-        circle(self.image, self.color, (self.smooth, self.rect.bottom - self.smooth), self.smooth)
+        circle(self.image, self.color, (self.smooth, self.rect.height - self.smooth), self.smooth)
         # правый нижний круг
-        circle(self.image, self.color, (self.rect.right - self.smooth, self.rect.bottom - self.smooth), self.smooth)
+        circle(self.image, self.color, (self.rect.width - self.smooth, self.rect.height - self.smooth), self.smooth)
         # горизонтальный прямоугольник
-        rect(self.image, self.color, ((0, self.smooth), (self.rect.right, self.rect.height - self.smooth * 2)))
+        rect(self.image, self.color, ((0, self.smooth), (self.rect.width, self.rect.height - self.smooth * 2)))
         # вертикальный прямоугольник
-        rect(self.image, self.color, ((self.smooth, 0), (self.rect.right - self.smooth * 2, self.rect.bottom)))
+        rect(self.image, self.color, ((self.smooth, 0), (self.rect.width - self.smooth * 2, self.rect.height)))
         return self.image
 
+pygame.image.save(Smooth(pos=(300, 300), size=(100, 100), smooth=50).generate_smooth(), 'gg.png')
 
 class TextBox(pygame.sprite.Sprite):
     """Создаёт текст"""
@@ -211,8 +214,27 @@ class Event:
         self.type = a
 
 
-class ThreadApp:
-    pass
+class ThreadApp(Thread):
+    def __init__(self, funk):
+        """Запускает поток который выполняет функцию"""
+        super().__init__(target=funk, args=[self])
+        self.app = None
+        self.status = True
+
+    def set_status(self, status: bool):
+        """установить статус выполненого задания"""
+        self.status = bool(status)
+        if not self.status and self.app is not None:
+            self.app.thread_break = True
+
+    def get_status(self):
+        return self.status
+
+    def add_app(self, app):
+        self.app = app
+
+    def remove_app(self):
+        self.app = None
 
 
 class Widget:
@@ -450,6 +472,8 @@ class Application:
         self.events = []
         # потоки
         self.threads = []
+        # поток(и) закончил работу
+        self.threads_break = False
         # анимационные виджеты
         self.animations = []
         # часы для граничения FPS
@@ -550,6 +574,8 @@ class Application:
         """добавить поток"""
         if issubclass(type(thread), ThreadApp):
             self.threads.append(thread)
+            thread.add_app(self)
+            thread.start()
         else:
             raise Exception(f"ThreadErr: thread is not is subclass ThreadApp")
 
@@ -557,6 +583,9 @@ class Application:
         """удалить поток"""
         if thread in self.threads:
             self.threads.remove(thread)
+            thread.remove_app()
+            thread.join()
+            thread = None
         else:
             raise Exception(f"thread not in application threads")
 
@@ -650,17 +679,18 @@ class Application:
                 if event.type == pygame.MOUSEMOTION:
                     self.set_active_widgets(event)
                 # событие нажатия клавиши мыши
-                if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.type in pygame.MOUSEBUTTONDOWN:
                     self.pressed_mouse_button.append(event.button)
+                    self.mouse_key_event(event)
                 # событие нажатия клавиши клавиатуры
-                if event.type == pygame.KEYDOWN:
+                if event.type in pygame.KEYDOWN:
                     self.pressed_key.append(event.key)
                     self.get_key_pressed_event(event)
                 # событие отжатия клавиши мыши
                 if event.type == pygame.MOUSEBUTTONUP:
                     if event.button in self.pressed_mouse_button:
                         self.pressed_mouse_button.remove(event.button)
-                    self.mouse_key_up_event(event)
+                    self.mouse_key_event(event)
                 # событие отжатия клавиши клавиатуры
                 if event.type == pygame.KEYUP:
                     if event.key in self.pressed_key:
@@ -712,11 +742,11 @@ class Application:
                 if widget.get_active():
                     good = True
 
-    def mouse_key_up_event(self, event):
+    def mouse_key_event(self, event):
         """не лезь
         обработка событий мыши"""
         # asd
-        if event.button == 1:
+        if event.button == 1 and event.type == pygame.MOUSEBUTTONUP:
             self.on_click(event)
         else:
             self.mouse_event(event)
