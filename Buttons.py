@@ -60,12 +60,12 @@ class Button(Widget):
         self.images.clear()
         # size = self.app.size_screen
         for image in self.original_images:
-            self.images.append(scale_to(image, size_screen.get_size(self.scale_zoom, self.scale_zoom)))
+            self.images.append(scale_to(image, [self.app.get_size(0, self.scale_zoom)[1]] * 2))
         self.rect = self.images[0].get_rect()
-        self.rect.x, self.rect.y = size_screen.get_size(*self.pos)
+        self.rect.x, self.rect.y =self.app.get_size(*self.pos)
         if self.test:
             print(self.rect, 'ggw')
-            # self.coord = size_screen.get_size(*self.pos)[0] - self.images[0].get_width(), 0
+            # self.coord =self.app.get_size(*self.pos)[0] - self.images[0].get_width(), 0
 
     def update(self, event):
         """Обновление стандартной кнопки"""
@@ -80,8 +80,7 @@ class Button(Widget):
 class TextWidget(Button):
     def __init__(self, image, coord):
         if image is None:
-            self.image = Smooth((0, 0), size_screen.get_size(0.3, 0.05), int(size_screen.get_size(0.3, 0.015)[1]),
-                                (200, 200, 200)).generate_smooth()
+            self.image = Surface((100, 100))
         else:
             self.image = check_image(image, 'image_text_widget')
         self.action = self.write_text
@@ -139,13 +138,12 @@ class TextWidget(Button):
         self.generate_image()
 
     def generate_image(self):
-        size_screen.set_size(self.app.size_screen[0], self.app.size_screen[1])
-        image = Smooth((0, 0), size_screen.get_size(0.3, 0.05), int(size_screen.get_size(0.3, 0.015)[1]),
+        image = Smooth((0, 0),self.app.get_size(0.3, 0.05), int(self.app.get_size(0.3, 0.015)[1]),
                        (200, 200, 200)).generate_smooth()
-        text = TextBox(size_screen.get_size(0.3, 0.035)[1], self.get_normal_text()).get_image()
+        text = TextBox(self.app.get_size(0.3, 0.035)[1], self.get_normal_text(), color=(10, 10, 10)).get_image()
         self.len_text = text.get_width()
-        image.blit(text, [10, 0], ((text.get_width() - size_screen.get_size(0.24, 0)[0], 0),
-                                   size_screen.get_size(0.24, 0.05)))
+        image.blit(text, [10, 0], ((text.get_width() -self.app.get_size(0.24, 0)[0], 0),
+                                  self.app.get_size(0.24, 0.05)))
         if image.get_width() != self.image.get_width() or image.get_height() != self.image.get_height():
             self.image = image
             self.rect = self.image.get_rect()

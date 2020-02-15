@@ -58,20 +58,6 @@ def check_image(image, help_name=None, color_key=None):
     return image
 
 
-class ScreenSize:
-    def __init__(self):
-        self.size_screen = [800, 600]
-
-    def get_size(self, x, y):
-        return [round(self.size_screen[0] * x), round(self.size_screen[1] * y)]
-
-    def set_size(self, x, y):
-        self.size_screen = [x, y]
-
-
-size_screen = ScreenSize()
-
-
 class Smooth:
     """Создаёт скруглёное Изображение"""
     def __init__(self, pos, size, smooth, color=(255, 255, 255)):
@@ -410,6 +396,7 @@ class Widget:
     # устнавить активным виджет
     def set_active(self, pos):
         self.active = self.rect.collidepoint(pos)
+        return self.rect.collidepoint(pos)
 
     # получить эзображение
     def get_surface(self):
@@ -425,7 +412,7 @@ class Widget:
 
     def generate_image(self):
         self.rect = self.image.get_rect()
-        self.rect.x, self.rect.y = size_screen.get_size(*self.coord)
+        self.rect.x, self.rect.y = self.app.get_size(*self.coord)
 
 
 class AnimationWidgets(Widget):
@@ -495,6 +482,9 @@ class Application:
         # список картинок мыши
         self.mouse_images = []
         self.mouse_rect = pygame.Rect(0, 0, 0, 0)
+
+    def get_size(self, x, y):
+        return [round(self.size_screen[0] * x), round(self.size_screen[1] * y)]
 
     # получить FPS
     def get_fps(self):
@@ -753,8 +743,7 @@ class Application:
             if good:
                 widget.active = False
             else:
-                widget.set_active(pos)
-                if widget.get_active():
+                if widget.set_active(pos):
                     good = True
 
     def mouse_key_event(self, event):

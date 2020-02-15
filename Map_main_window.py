@@ -11,7 +11,7 @@ screen = pygame.display.set_mode(size_screen)
 
 clock = pygame.time.Clock()
 
-application = Application(size_screen, (200, 0, 0), False)
+application = Application(size_screen, (100, 100, 100), False)
 text_widget = TextWidget(None, [0, 0])
 application.add_widget(text_widget, 2)
 push_off = check_image('Widget_image/Button/delet_off.png', color_key=-1)
