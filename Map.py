@@ -7,8 +7,12 @@ from WEB_requests import LoadChunk
 
 
 def generate_coord(x, y):
-    return f"{x * 17.5},{y * 15.0}"
-
+    if abs(y) != 5:
+        return f"{x * 17.5},{y * 16}"
+    elif y == 0:
+        pass
+    else:
+        return f"{x},{y * 16}"
 
 
 class Map(Widget):
@@ -92,22 +96,23 @@ class Map(Widget):
             self.pressed = False
 
 
-api_server = "http://static-maps.yandex.ru/1.x/"
-print('generate')
-params = {
-    "ll": '0.0,0.0',
-    'spn': "10.0,10.0",
-    "l": "sat",
-    "z": "5",
-    "size": "400,400"
-}
+if __name__ == '__main__':
+    api_server = "http://static-maps.yandex.ru/1.x/"
+    print('generate')
+    params = {
+        "ll": '0.0,0.0',
+        'spn': "10.0,10.0",
+        "l": "sat",
+        "z": "5",
+        "size": "400,400"
+    }
 
-app = Application((100, 100))
-map = Map((int(22.0 / 10 * 600), int(22.0 // 10 * 450 + 400)))
-app.add_widget(map)
-for y in range(-5, 6):
-    for x in range(-10, 10):
-        params["ll"] = generate_coord(x, y)
-        map.add_chunk(requests.get(api_server, params=params), (x * 10, y * 10))
-map.generate_image()
-app.run()
+    app = Application((100, 100))
+    map = Map((int(22.0 / 10 * 600), int(22.0 // 10 * 450 + 400)))
+    app.add_widget(map)
+    for y in range(-1, 2):
+        for x in range(2):
+            params["ll"] = generate_coord(x, y)
+            map.add_chunk(requests.get(api_server, params=params), (x * 10, y * 10))
+    map.generate_image()
+    app.run()
