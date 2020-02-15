@@ -7,12 +7,50 @@ from WEB_requests import LoadChunk
 
 
 def generate_coord(x, y):
-    if abs(y) != 5:
-        return f"{x * 17.5},{y * 16}"
-    elif y == 0:
-        pass
+    print(y)
+    mn = 1 if y > 0 else -1
+    nm = -3.4 if y <= 0 else 0
+    if abs(y) == 0:
+        return f"{x * 17.5},{1.7 * mn - nm}"
+    elif abs(y) == 1:  # 17.3
+        return f"{x * 17.5},{19 * mn - nm}"
+    elif abs(y) == 2:  # 15.5
+        return f"{x * 17.5},{34.5 * mn - nm}"
+    elif abs(y) == 3:  # 13.5
+        return f"{x * 17.5},{48 * mn - nm}"
+    elif abs(y) == 4:  # 11.5
+        return f"{x * 17.5},{58.5 * mn - nm}"
+    elif abs(y) == 5:  # 8
+        return f"{x * 17.5},{66.5 * mn - nm}"
+    elif abs(y) == 6:  # 6.1
+        return f"{x * 17.5},{72.6 * mn - nm}"
+    elif abs(y) == 7:  # 4.55
+        return f"{x * 17.5},{77.15 * mn - nm}"
+    elif abs(y) == 8:  # 3.37
+        return f"{x * 17.5},{80.52 * mn - nm}"
+    elif abs(y) == 9:  # ~2
+        return f"{x * 17.5},{83 * mn - nm}"
+    elif abs(y) == 10:  #
+        return f"{x * 17.5},{84.67715 * mn - nm}"
+    elif abs(y) != 5:  # 5.5
+        return f"{x * 17.5},{64 * mn - nm}"
     else:
         return f"{x},{y * 16}"
+
+
+def get_spn(y):
+    if abs(y) <= 3:
+        return f"{10},{10}"
+    elif abs(y) == 4:
+        return f"{7.5},{7.5}"
+    elif abs(y) == 5:
+        return f"{5},{5}"
+    elif abs(y) in [6, 7]:
+        return f"{3},{3}"
+    elif abs(y) in [8, 9]:
+        return f"{2},{2}"
+    else:
+        return f"{3},{3}"
 
 
 class Map(Widget):
@@ -27,7 +65,7 @@ class Map(Widget):
         self.coord_lu = [22.00, 22.00]
         self.pressed = False
         self.last_pos = None
-        self.test = True
+        self.test = False
         if self.test:
             print(self.rect)
 
@@ -107,12 +145,13 @@ if __name__ == '__main__':
         "size": "400,400"
     }
 
-    app = Application((100, 100))
+    app = Application((500, 500))
     map = Map((int(22.0 / 10 * 600), int(22.0 // 10 * 450 + 400)))
     app.add_widget(map)
-    for y in range(-1, 2):
-        for x in range(2):
+    for y in range(-10, 11):
+        for x in range(-10, 11):
             params["ll"] = generate_coord(x, y)
+            params['spn'] = get_spn(y)
             map.add_chunk(requests.get(api_server, params=params), (x * 10, y * 10))
     map.generate_image()
     app.run()
