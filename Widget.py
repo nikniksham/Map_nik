@@ -29,24 +29,28 @@ pygame.init()
 FONT_STYLE = 'data/Font/NeogreyMedium.otf'
 
 
-def load_image(name):
-    """Открытие изображений"""
+def load_image(name, colorkey=None):
     fullname = os.path.join('data', name)
-    # Проверка на то, что изображение по этому пути существует
-    if os.path.isfile(fullname):
+    try:
         image = pygame.image.load(fullname)
-        image = image.convert_alpha()
-        return image
-    raise Exception(f'Изображение по пути {fullname} не существует')
+    except pygame.error as message:
+        print('Cannot load image:', name)
+        raise SystemExit(message)
+    # if colorkey is not None:
+    if colorkey == -1:
+        colorkey = image.get_at((0, 0))
+        image.set_colorkey(colorkey)
+    image = image.convert_alpha()
+    return image
 
 
-def check_image(image, help_name=None):
+def check_image(image, help_name=None, color_key=None):
     """Проверка картинки, или путя к ней
     Есть 2 параметра: 1 обязательный - путь к картинке, 2 - необязательный, это имя, нужное для отладки"""
     # 2 параметра - картинка, или путь к ней, а так же её имя, нужное для отладки
     if type(image) != pygame.Surface:
         if type(image) == str:
-            image = load_image(image)
+            image = load_image(image, color_key)
         else:
             if help_name is None:
                 help_name = image
@@ -271,7 +275,7 @@ class Widget:
         self.rect = self.image.get_rect()
         # коорданиаты
         self.coord = coord
-        self.rect.x, self.rect.y = coord
+        self.rect.x, self.rect.y = 0, 0
         # активени или нет
         self.active = active
         # зумируемый
@@ -300,7 +304,7 @@ class Widget:
         w_, h_ = self.coord
         # self.image = scale_to(self.image_orig, (w, h))
         if w_ < 0:
-            self.rect.right = w + w_
+            self.rect.right = self.app
         else:
             self.rect.x = w_
         if h_ < 0:
@@ -420,7 +424,8 @@ class Widget:
         return self.rect
 
     def generate_image(self):
-        pass
+        self.rect = self.image.get_rect()
+        self.rect.x, self.rect.y = size_screen.get_size(*self.coord)
 
 
 class AnimationWidgets(Widget):

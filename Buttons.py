@@ -9,18 +9,22 @@ class Button(Widget):
         self.name = name
         self.original_images = []
         for image in images:
-            img = check_image(image)
-            img.set_colorkey((0, 0, 0))
+            img = check_image(image, color_key=(0, 0, 0))
             self.images.append(img)
             self.original_images.append(img)
         self.action = action
         self.pressed = False
         self.toggle = toggle
+        self.pos = coord
         super().__init__(self.images[0], coord)
-        self.set_image(check_image(self.images[0]))
+        self.test = True
 
     def get_active(self):
         return self.active or self.pressed
+
+    def get_rect(self):
+        print(self.rect, 'ggg')
+        return self.rect
 
     def get_pressed(self):
         return self.pressed
@@ -48,18 +52,20 @@ class Button(Widget):
         else:
             return self.images[2]
 
+    def set_application(self, app):
+        self.app = app
+        self.generate_image()
+
     def generate_image(self):
         self.images.clear()
-        size = self.app.size_screen
+        # size = self.app.size_screen
         for image in self.original_images:
-            self.images.append(scale_to(image, (size[1] * self.scale_zoom, size[1] * self.scale_zoom)))
+            self.images.append(scale_to(image, size_screen.get_size(self.scale_zoom, self.scale_zoom)))
         self.rect = self.images[0].get_rect()
-        if self.name == 'delete_button':
-            print(size_screen.get_size(0.3, 0.05)[0] - self.images[0].get_width())
-            self.rect.x, self.rect.y = size_screen.get_size(0.3, 0.05)[0] - self.images[0].get_width(), 0
-            self.coord = size_screen.get_size(0.3, 0.05)[0] - self.images[0].get_width(), 0
-        self.rect.x = self.coord[0]
-        self.rect.y = self.coord[1]
+        self.rect.x, self.rect.y = size_screen.get_size(*self.pos)
+        if self.test:
+            print(self.rect, 'ggw')
+            # self.coord = size_screen.get_size(*self.pos)[0] - self.images[0].get_width(), 0
 
     def update(self, event):
         """Обновление стандартной кнопки"""
