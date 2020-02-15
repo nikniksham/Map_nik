@@ -2,11 +2,17 @@ from Widget import *
 
 
 class Button(Widget):
-    def __init__(self, images, action, coord, toggle=False):
+    def __init__(self, images, action, coord, toggle=False, scale_zoom=0.05, name=None):
         """Загрузка картинок, действие, координаты, тип - push, toggle"""
         self.images = []
+        self.scale_zoom = scale_zoom
+        self.name = name
+        self.original_images = []
         for image in images:
-            self.images.append(check_image(image, 'image_button'))
+            img = check_image(image)
+            img.set_colorkey((0, 0, 0))
+            self.images.append(img)
+            self.original_images.append(img)
         self.action = action
         self.pressed = False
         self.toggle = toggle
@@ -41,6 +47,19 @@ class Button(Widget):
                 return self.images[0]
         else:
             return self.images[2]
+
+    def generate_image(self):
+        self.images.clear()
+        size = self.app.size_screen
+        for image in self.original_images:
+            self.images.append(scale_to(image, (size[1] * self.scale_zoom, size[1] * self.scale_zoom)))
+        self.rect = self.images[0].get_rect()
+        if self.name == 'delete_button':
+            print(size_screen.get_size(0.3, 0.05)[0] - self.images[0].get_width())
+            self.rect.x, self.rect.y = size_screen.get_size(0.3, 0.05)[0] - self.images[0].get_width(), 0
+            self.coord = size_screen.get_size(0.3, 0.05)[0] - self.images[0].get_width(), 0
+        self.rect.x = self.coord[0]
+        self.rect.y = self.coord[1]
 
     def update(self, event):
         """Обновление стандартной кнопки"""
@@ -139,7 +158,8 @@ class TextWidget(Button):
 
 
 class Slider(Widget):
-    def __init__(self, image, coord, min_value, max_value, height_slider, width_slider=10, color_slider=(150, 150, 150)):
+    def __init__(self, image, coord, min_value, max_value, height_slider, width_slider=10,
+                 color_slider=(150, 150, 150)):
         """Кнопка 'Slider'
         Очень полезная вещь, используется для динамичного регулирования параметров
         звука, зума и тд"""
@@ -175,7 +195,8 @@ class Slider(Widget):
 
     def set_pressed(self):
         """Проверка на то, что кнопка активна"""
-        self.pressed = pygame.mouse.get_pressed()[0] == 1 and self.rect.collidepoint(pygame.mouse.get_pos())
+        self.pressed = pygame.mouse.get_pressed()[0] == 1 and self.rect.collidepoint(pygame.mouse.get_pos()[0],
+                                                                                     pygame.mouse.get_pos()[1])
 
     def get_active(self):
         return self.active or self.pressed
@@ -195,4 +216,4 @@ class Slider(Widget):
             self.set_pressed()
             if self.get_active():
                 self.generate_image()
-                # print(self.coord_slider[1], pygame.mouse.get_pos()[1], self.coord_slider[1] + self.height_slider, 'gg')
+                # print(self.coord_slider[1], pygame.mouse.get_pos()[1], self.coord_slider[1] + self.height_slider)

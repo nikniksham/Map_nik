@@ -59,7 +59,7 @@ class ScreenSize:
         self.size_screen = [800, 600]
 
     def get_size(self, x, y):
-        return [self.size_screen[0] * x, self.size_screen[1] * y]
+        return [round(self.size_screen[0] * x), round(self.size_screen[1] * y)]
 
     def set_size(self, x, y):
         self.size_screen = [x, y]
@@ -200,6 +200,7 @@ class TextBox(pygame.sprite.Sprite):
 
 
 def scale_to(image, size):
+    size = (round(size[0]), round(size[1]))
     return scale(image, size)
 
 
@@ -417,6 +418,9 @@ class Widget:
     # поллучить Rect
     def get_rect(self):
         return self.rect
+
+    def generate_image(self):
+        pass
 
 
 class AnimationWidgets(Widget):
@@ -670,11 +674,12 @@ class Application:
                 if event.type == pygame.QUIT:
                     self.running = False
                     return self.quit()
-                if event.type == pygame.VIDEORESIZE and False:
+                if event.type == pygame.VIDEORESIZE:
                     width, height = event.w, event.h
                     self.set_screen((width, height), self.get_full_screen())
                     for widget in self.get_widgets():
                         widget.set_position(width, height)
+                        widget.generate_image()
                 if event.type == pygame.MOUSEMOTION:
                     self.set_active_widgets(event)
                     self.widget_event(event)
