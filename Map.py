@@ -10,29 +10,31 @@ def generate_coord(x, y):
     print(y)
     mn = 1 if y > 0 else -1
     nm = -3.4 if y <= 0 else 0
-    if abs(y) == 0:
+    # Коменты не актуальны, кстати, надо будет сделать более точное размещение, но это только тогда, когда будет норм
+    # зум, то есть завтра
+    if round(abs(y)) == 0:
         return f"{x * 17.5},{1.7 * mn - nm}"
-    elif abs(y) == 1:  # 17.3
+    elif round(abs(y)) == 1:  # 17.3
         return f"{x * 17.5},{19 * mn - nm}"
-    elif abs(y) == 2:  # 15.5
+    elif round(abs(y)) == 2:  # 15.5
         return f"{x * 17.5},{34.5 * mn - nm}"
-    elif abs(y) == 3:  # 13.5
-        return f"{x * 17.5},{48 * mn - nm}"
-    elif abs(y) == 4:  # 11.5
-        return f"{x * 17.5},{58.5 * mn - nm}"
-    elif abs(y) == 5:  # 8
-        return f"{x * 17.5},{66.5 * mn - nm}"
-    elif abs(y) == 6:  # 6.1
-        return f"{x * 17.5},{72.6 * mn - nm}"
-    elif abs(y) == 7:  # 4.55
-        return f"{x * 17.5},{77.15 * mn - nm}"
-    elif abs(y) == 8:  # 3.37
+    elif round(abs(y)) == 3:  # 13.5
+        return f"{x * 17.5},{47.75 * mn - nm}"
+    elif round(abs(y)) == 4:  # 11.5
+        return f"{x * 17.5},{58.28 * mn - nm}"
+    elif round(abs(y)) == 5:  # 8
+        return f"{x * 17.5},{66.4 * mn - nm}"
+    elif round(abs(y)) == 6:  # 6.1
+        return f"{x * 17.5},{72.53 * mn - nm}"
+    elif round(abs(y)) == 7:  # 4.55
+        return f"{x * 17.5},{77.095 * mn - nm}"
+    elif round(abs(y)) == 8:  # 3.37
         return f"{x * 17.5},{80.52 * mn - nm}"
-    elif abs(y) == 9:  # ~2
+    elif round(abs(y)) == 9:  # ~2
         return f"{x * 17.5},{83 * mn - nm}"
-    elif abs(y) == 10:  #
+    elif round(abs(y)) == 10:  #
         return f"{x * 17.5},{84.67715 * mn - nm}"
-    elif abs(y) != 5:  # 5.5
+    elif round(abs(y)) != 5:  # 5.5
         return f"{x * 17.5},{64 * mn - nm}"
     else:
         return f"{x},{y * 16}"
