@@ -2,28 +2,30 @@ from Widget import *
 
 
 class Button(Widget):
-    def __init__(self, images, action, coord, toggle=False, scale_zoom=0.05, name=None):
+    def __init__(self, images, action, coord, circle=True, type_button='Push', scale_zoom_x=0.05, scale_zoom_y=0.05,
+                 name=None):
         """Загрузка картинок, действие, координаты, тип - push, toggle"""
         self.images = []
-        self.scale_zoom = scale_zoom
+        self.circle = circle
+        self.scale_zoom_x = scale_zoom_x
+        self.scale_zoom_y = scale_zoom_y
         self.name = name
         self.original_images = []
         for image in images:
-            img = check_image(image, color_key=(0, 0, 0))
+            img = check_image(image, color_key=-1)
             self.images.append(img)
             self.original_images.append(img)
         self.action = action
         self.pressed = False
-        self.toggle = toggle
+        self.type_button = type_button
         self.pos = coord
         super().__init__(self.images[0], coord)
-        self.test = True
+        self.test = False
 
     def get_active(self):
         return self.active or self.pressed
 
     def get_rect(self):
-        print(self.rect, 'ggg')
         return self.rect
 
     def get_pressed(self):
@@ -31,17 +33,21 @@ class Button(Widget):
 
     def set_pressed(self, event):
         if event.type == pygame.MOUSEBUTTONUP:
-            if not self.toggle:
+            if self.type_button == 'Push':
                 self.pressed = event.button == 1 and self.rect.collidepoint(event.pos)
-            else:
-                if self.pressed and self.rect.collidepoint(event.pos):
-                    self.pressed = False
+        if self.type_button == 'Toggle':
+            if event.button == 1:
+                if self.pressed:
+                    self.pressed = not self.pressed
                 else:
-                    self.pressed = event.button == 1
-            return
-        if not self.toggle:
-            if self.pressed:
-                self.pressed = not self.pressed
+                    self.pressed = self.rect.collidepoint(event.pos)
+        if self.type_button == 'Radio':
+            if event.button == 1 and self.rect.collidepoint(event.pos):
+                self.pressed = True
+                button_list = self.get_radio_list().get_buttons()[:]
+                button_list.remove(self)
+                for button in button_list:
+                    button.pressed = False
 
     def get_surface(self):
         if not self.pressed:
@@ -60,9 +66,12 @@ class Button(Widget):
         self.images.clear()
         # size = self.app.size_screen
         for image in self.original_images:
-            self.images.append(scale_to(image, [self.app.get_size(0, self.scale_zoom)[1]] * 2))
+            if self.circle:
+                self.images.append(scale_to(image, [self.app.get_size(0, self.scale_zoom_x)[1]] * 2))
+            else:
+                self.images.append(scale_to(image, self.app.get_size(self.scale_zoom_x, self.scale_zoom_y)))
         self.rect = self.images[0].get_rect()
-        self.rect.x, self.rect.y =self.app.get_size(*self.pos)
+        self.rect.x, self.rect.y = self.app.get_size(*self.pos)
         if self.test:
             print(self.rect, 'ggw')
             # self.coord =self.app.get_size(*self.pos)[0] - self.images[0].get_width(), 0
@@ -138,12 +147,12 @@ class TextWidget(Button):
         self.generate_image()
 
     def generate_image(self):
-        image = Smooth((0, 0),self.app.get_size(0.3, 0.05), int(self.app.get_size(0.3, 0.015)[1]),
+        image = Smooth((0, 0), self.app.get_size(0.3, 0.05), int(self.app.get_size(0.3, 0.015)[1]),
                        (200, 200, 200)).generate_smooth()
         text = TextBox(self.app.get_size(0.3, 0.035)[1], self.get_normal_text(), color=(10, 10, 10)).get_image()
         self.len_text = text.get_width()
-        image.blit(text, [10, 0], ((text.get_width() -self.app.get_size(0.24, 0)[0], 0),
-                                  self.app.get_size(0.24, 0.05)))
+        image.blit(text, [10, 0], ((text.get_width() - self.app.get_size(0.24, 0)[0], 0),
+                                   self.app.get_size(0.24, 0.05)))
         if image.get_width() != self.image.get_width() or image.get_height() != self.image.get_height():
             self.image = image
             self.rect = self.image.get_rect()
@@ -220,4 +229,67 @@ class Slider(Widget):
             self.set_pressed()
             if self.get_active():
                 self.generate_image()
-                # print(self.coord_slider[1], pygame.mouse.get_pos()[1], self.coord_slider[1] + self.height_slider)
+
+
+class RadioButtons:
+    def __init__(self, buttons):
+        """Список кнопок, с 1 выбором"""
+        self.buttons = []
+        for b in buttons:
+            b.set_radio_list(self)
+            self.buttons.append(b)
+        self.choice = None
+
+    def add_button(self, button):
+        """Добавляет кнопки в список"""
+        if button not in self.buttons:
+            self.buttons.append(button)
+        else:
+            raise Exception('Такая кнопка в списке кнопок уже есть')
+
+    def remove_button(self, button):
+        """Удаляет кнопку из списка"""
+        if button in self.buttons:
+            self.buttons.remove(button)
+        else:
+            raise Exception('Такой кнопки в списке кнопок нет')
+
+    def get_choice(self):
+        """Возвращает выбор"""
+        return self.choice
+
+    def set_choice(self, choice):
+        """Устанавливает выбор"""
+        self.choice = choice
+
+    def get_buttons(self):
+        """Получить список кнопок"""
+        return self.buttons
+
+
+class RadioButton(Button):
+    def __init__(self, images, action, coord, choice, circle=False, type_button='Radio', scale_zoom_x=0.08,
+                 scale_zoom_y=0.035, name=None):
+        super().__init__(images, action, coord, circle, type_button, scale_zoom_x, scale_zoom_y, name)
+        self.radio_list = None
+        self.choice = choice
+        self.action = self.set_choice
+
+    def set_choice(self):
+        """Устанавливает выбор"""
+        if self.radio_list is not None:
+            if self.radio_list.get_choice() != self.choice:
+                self.radio_list.set_choice(self.choice)
+        else:
+            raise Exception('Эта кнопка не относится к списку радио кнопок')
+
+    def set_radio_list(self, radio_list):
+        """Задаёт список радиокнопок"""
+        self.radio_list = radio_list
+
+    def s_p(self):
+        self.pressed = True
+
+    def get_radio_list(self):
+        """Возвращает список кнопок, к которой относится эта кнопка"""
+        return self.radio_list

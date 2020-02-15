@@ -19,8 +19,25 @@ push_active = check_image('Widget_image/Button/delet_active.png', color_key=-1)
 push_on = check_image('Widget_image/Button/delet_on.png', color_key=-1)
 push_button = Button([push_off, push_active, push_on], text_widget.delete_text, [0.25, 0], name='delete_button')
 slider_button_image = Smooth([0, 0], [50, 50], 25).generate_smooth()
-slider_button = Slider(slider_button_image, [400, 200], 0, 1, 300, color_slider=(200, 200, 50))
-pygame.image.save(slider_button_image, 'test.png')
+slider_button = Slider(slider_button_image, [-0.005, 0.3], 0, 1, 300, color_slider=(200, 200, 50))
+create = False
+if create:
+    name_image = ['_off.png', '_on.png', '_active.png']
+    c = [[180] * 3, [100, 100, 255], [230] * 3]
+    for i in range(3):
+        image = Smooth([0, 0], (200, 50), 25, c[i]).generate_smooth()
+        image.blit(TextBox(30, '', color=(10, 10, 10)).get_image(), [42, 7])
+        pygame.image.save(image, f'map{name_image[i]}')
+sat_radio_button = RadioButton(['Widget_image/Button/sat_off.png', 'Widget_image/Button/sat_active.png',
+                                'Widget_image/Button/sat_on.png'], None, (0.01, 0.94), 'sat')
+map_radio_button = RadioButton(['Widget_image/Button/map_off.png', 'Widget_image/Button/map_active.png',
+                                'Widget_image/Button/map_on.png'], None, (0.10, 0.94), 'map')
+sat_skl_radio_button = RadioButton(['Widget_image/Button/sat_skl_off.png', 'Widget_image/Button/sat_skl_active.png',
+                                    'Widget_image/Button/sat_skl_on.png'], None, (0.19, 0.94), 'sat_skl')
+radio_list = RadioButtons([sat_radio_button, map_radio_button, sat_skl_radio_button])
+application.add_widget(sat_radio_button, 2)
+application.add_widget(map_radio_button, 2)
+application.add_widget(sat_skl_radio_button, 2)
 application.add_widget(slider_button, 2)
 application.add_widget(push_button, 3)
 application.run()

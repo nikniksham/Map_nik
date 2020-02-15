@@ -279,24 +279,25 @@ class Widget:
         if self.size is not None and self.stock:
             self.image = scale_to(self.image, self.size)
         if self.app is not None:
-            self.set_position(self.app.get_width(), self.app.get_height())
+            self.set_position()
         if self.stock:
             self.zoom = self.start_zoom
         if self.zoom != 1:
             self.set_zoom(zoom=self.zoom)
 
     # пересчитать позицию
-    def set_position(self, w, h):
+    def set_position(self):
         w_, h_ = self.coord
+        size = self.app.get_size(1, 1)
         # self.image = scale_to(self.image_orig, (w, h))
         if w_ < 0:
-            self.rect.right = self.app
+            self.rect.right = size[0] - size[0] * abs(w_)
         else:
-            self.rect.x = w_
+            self.rect.x = size[0] * abs(w_)
         if h_ < 0:
-            self.rect.bottom = h + h_
+            self.rect.bottom = size[1] - size[1] * abs(h_)
         else:
-            self.rect.y = h_
+            self.rect.y = size[1] * abs(h_)
 
     # используется в приложении или нет
     def in_application(self):
@@ -345,7 +346,7 @@ class Widget:
             self.image = scale_to(self.image, self.size)
         self.rect.width, self.rect.height = self.image.get_rect()
         if self.app is not None:
-            self.set_position(self.app.get_width(), self.app.get_height())
+            self.set_position()
 
     # получить скролимый по x
     def get_is_scrolling_x(self):
@@ -524,7 +525,7 @@ class Application:
         # добавить виджет на экран на слой=layer если не получается то return False
         if issubclass(type(widget), Widget):
             widget.set_application(self)
-            widget.set_position(self.widht, self.height)
+            widget.set_position()
             if layer in self.widgets:
                 if widget not in self.widgets[layer]:
                     self.widgets[layer].append(widget)
@@ -673,7 +674,7 @@ class Application:
                     width, height = event.w, event.h
                     self.set_screen((width, height), self.get_full_screen())
                     for widget in self.get_widgets():
-                        widget.set_position(width, height)
+                        widget.set_position()
                         widget.generate_image()
                 if event.type == pygame.MOUSEMOTION:
                     self.set_active_widgets(event)
