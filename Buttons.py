@@ -227,7 +227,6 @@ class Slider(Widget):
         if event.type in [pygame.MOUSEBUTTONDOWN, pygame.MOUSEMOTION] and self.app.mouse_pressed(1):
             self.set_pressed()
             if self.get_active():
-                self.app.map.set_zoom(self.get_value())
                 self.generate_image()
 
 
