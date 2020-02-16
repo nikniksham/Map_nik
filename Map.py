@@ -86,7 +86,7 @@ class Map(Widget):
     def update_mod(self):
         """обновляет режим карты если режим изменился возвращает True иначе False"""
         if self.mods is not None:
-            if self.mods.get_choice() != self.mod:
+            if self.mods.get_choice() != self.mod and self.mods.get_choice() is not None:
                 self.mod = self.mods.get_choice()
                 self.map = {}
             return self.mods.get_choice() != self.mod
@@ -121,7 +121,7 @@ class Map(Widget):
                 params = {
                     "ll": ll,
                     "spn": ",".join([str(step), str(step)]),
-                    "l": "map",
+                    "l": self.mod,
                     'size': '500,500'
                 }
                 self.app.add_thread(LoadChunk('http://static-maps.yandex.ru/1.x/', params, self.add_chunk, ll))
@@ -137,15 +137,24 @@ class Map(Widget):
         size = self.app.screen.get_size()
         count = 0
         print("coord:", coord[0] // self.size_image[0], coord[1] // self.size_image[1])
-        for y in range(coord[1] // self.size_image[1], (coord[1] + size[1]) // self.size_image[1] + 1):
-            for x in range(coord[0] // self.size_image[0], (coord[0] + size[0]) // self.size_image[0] + 1):
+        for y in range(coord[1] // self.size_image[1], (coord[1] + size[1]) // self.size_image[1] + 2):
+            for x in range(coord[0] // self.size_image[0], (coord[0] + size[0]) // self.size_image[0] + 2):
                 x %= 21
                 y %= 21
                 try:
                     res.append(((x * self.size_image[0], y * self.size_image[1]), self.map[(x * self.size_image[0], y * self.size_image[1])]))
                     count += 1
                 except Exception:
-                    print(x, y)
+                    print('load:', x, y, self.mod)
+                    api_server = "http://static-maps.yandex.ru/1.x/"
+                    params = {
+                        "ll": generate_coord(x - 10, y - 10),
+                        'spn': get_spn(y - 10),
+                        "l": self.mod,
+                        "z": "5",
+                        "size": "400,400"
+                    }
+                    self.add_chunk(requests.get(api_server, params=params), (x * 10, y * 10))
         print(count)
         for key, val in self.map.items():
             if self.test:
@@ -167,6 +176,8 @@ class Map(Widget):
             raise Exception(f"Что-то пошло не так, проверьте соеденинение с интернетом. Ошибка: {request.status_code}.\n{request.url}")
 
     def update(self, event):
+        if self.update_mod():
+            self.generate_image()
         if event.type == pygame.MOUSEBUTTONDOWN:
             self.pressed = True
             self.last_pos = event.pos
@@ -182,23 +193,8 @@ class Map(Widget):
 
 
 if __name__ == '__main__':
-    api_server = "http://static-maps.yandex.ru/1.x/"
-    print('generate')
-    params = {
-        "ll": '0.0,0.0',
-        'spn': "10.0,10.0",
-        "l": "sat",
-        "z": "5",
-        "size": "400,400"
-    }
-
     app = Application((500, 500))
     map = Map((int(22.0 / 10 * 600), int(22.0 // 10 * 450 + 400)))
     app.add_widget(map)
-    for y in range(-10, 11):
-        for x in range(-10, 11):
-            params["ll"] = generate_coord(x, y)
-            params['spn'] = get_spn(y)
-            map.add_chunk(requests.get(api_server, params=params), (x * 10, y * 10))
     map.generate_image()
     app.run()
