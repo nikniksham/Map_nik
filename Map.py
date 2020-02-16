@@ -69,7 +69,7 @@ class Map(Widget):
         self.last_pos = None
         self.test = False
         self.size_chunk = (8230, 7905)
-        self.mod = 'map'
+        self.mod = 'sat,skl'
         self.mods = None
         if self.test:
             print(self.rect)
@@ -108,23 +108,16 @@ class Map(Widget):
         if self.test:
             print(self.coord_)
 
-    def load_map(self):
-        step = self.step  # - self.app.zoom
-        for y in range(-1, (self.rect.bottom - self.rect.y) // 500 + 1 + (
-                1 if (self.rect.bottom - self.rect.y) % 500 != 0 else 0)):
-            for x in range(-1, (self.rect.right - self.rect.x) // 500 + 1 + (
-                    1 if (self.rect.right - self.rect.x) % 500 != 0 else 0)):
-                coord_ = (self.coord_[0] + step * x, self.coord_[1] + step * y)
-                ll = ','.join(map(str, coord_))
-                if self.test:
-                    print(ll)
-                params = {
-                    "ll": ll,
-                    "spn": ",".join([str(step), str(step)]),
-                    "l": self.mod,
-                    'size': '500,500'
-                }
-                self.app.add_thread(LoadChunk('http://static-maps.yandex.ru/1.x/', params, self.add_chunk, ll))
+    def load_map(self, x, y):
+        api_server = "http://static-maps.yandex.ru/1.x/"
+        params = {
+            "ll": generate_coord(x - 10, y - 10),
+            'spn': get_spn(y - 10),
+            "l": self.mod,
+            "z": "5",
+            "size": "400,400"
+        }
+        self.app.add_thread(LoadChunk(api_server, params, self.add_chunk, (x * 10, y * 10)))
 
     def get_point(self, coord):
         pass
@@ -136,27 +129,20 @@ class Map(Widget):
         coord = self.coord_[:]
         size = self.app.screen.get_size()
         count = 0
+        map_ = self.map.copy()
         print("coord:", coord[0] // self.size_image[0], coord[1] // self.size_image[1])
-        for y in range(coord[1] // self.size_image[1], (coord[1] + size[1]) // self.size_image[1] + 2):
-            for x in range(coord[0] // self.size_image[0], (coord[0] + size[0]) // self.size_image[0] + 2):
+        for y in range(coord[1] // self.size_image[1] - 1, (coord[1] + size[1]) // self.size_image[1]):
+            for x in range(coord[0] // self.size_image[0] - 1, (coord[0] + size[0]) // self.size_image[0] + 1):
                 x %= 21
                 y %= 21
                 try:
-                    res.append(((x * self.size_image[0], y * self.size_image[1]), self.map[(x * self.size_image[0], y * self.size_image[1])]))
+                    print(x, y)
+                    res.append(((x * self.size_image[0], y * self.size_image[1]), map_[(x * self.size_image[0], y * self.size_image[1])]))
                     count += 1
                 except Exception:
-                    print('load:', x, y, self.mod)
-                    api_server = "http://static-maps.yandex.ru/1.x/"
-                    params = {
-                        "ll": generate_coord(x - 10, y - 10),
-                        'spn': get_spn(y - 10),
-                        "l": self.mod,
-                        "z": "5",
-                        "size": "400,400"
-                    }
-                    self.add_chunk(requests.get(api_server, params=params), (x * 10, y * 10))
+                    self.load_map(x, y)
         print(count)
-        for key, val in self.map.items():
+        for key, val in res:
             if self.test:
                 print(key, val)
                 print(self.get_pos(*key), 'gg')

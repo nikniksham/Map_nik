@@ -1,4 +1,4 @@
-from Widget import ThreadApp
+from Widget import ThreadApp, Thread
 import requests
 
 
@@ -8,6 +8,7 @@ class WebLoad(ThreadApp):
         url - адресс с которого надо загрузить
         params - параметры для запроса
         res_to - функциюкоторую надо будет вызвать после завершения запроса"""
+        Thread.__init__(self)
         self.url = url
         self.params = params
         self.res_to = res_to

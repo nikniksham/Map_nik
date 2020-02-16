@@ -19,8 +19,8 @@ push_off = check_image('Widget_image/Button/delet_off.png', color_key=-1)
 push_active = check_image('Widget_image/Button/delet_active.png', color_key=-1)
 push_on = check_image('Widget_image/Button/delet_on.png', color_key=-1)
 push_button = Button([push_off, push_active, push_on], text_widget.delete_text, [0.25, 0], name='delete_button')
-slider_button_image = Smooth([0, 0], [50, 50], 25).generate_smooth()
-slider_button = Slider(slider_button_image, [-0.005, 0.3], 0, 1, 300, color_slider=(200, 200, 50))
+# slider_button_image = Smooth([0, 0], [50, 50], 25).generate_smooth()
+# slider_button = Slider(slider_button_image, [-0.005, 0.3], 300, color_slider=(200, 200, 50))
 api_server = "http://static-maps.yandex.ru/1.x/"
 print('generate')
 params = {
@@ -31,7 +31,7 @@ params = {
     "size": "400,400"
 }
 
-map = Map((4000, 4000))
+map = Map((0, 7905))
 application.add_widget(map, 0)
 # x
 # min 0
@@ -59,6 +59,6 @@ sat_skl_radio_button.s_p()
 application.add_widget(sat_radio_button, 2)
 application.add_widget(map_radio_button, 2)
 application.add_widget(sat_skl_radio_button, 2)
-application.add_widget(slider_button, 2)
+#application.add_widget(slider_button, 2)
 application.add_widget(push_button, 3)
 application.run()
