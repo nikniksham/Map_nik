@@ -9,29 +9,29 @@ from WEB_requests import LoadChunk
 def generate_coord(x, y):
     print(y)
     mn = 1 if y > 0 else -1
-    nm = -3.4 if y <= 0 else 0
+    nm = 0 if y <= 0 else 0
     # Коменты не актуальны, кстати, надо будет сделать более точное размещение, но это только тогда, когда будет норм
     # зум, то есть завтра
     if round(abs(y)) == 0:
-        return f"{x * 17.5},{1.7 * mn - nm}"
+        return f"{x * 17.5},{0 * mn - nm}"
     elif round(abs(y)) == 1:  # 17.3
-        return f"{x * 17.5},{19 * mn - nm}"
+        return f"{x * 17.5},{17.4 * mn - nm}"  # redy
     elif round(abs(y)) == 2:  # 15.5
-        return f"{x * 17.5},{34.5 * mn - nm}"
+        return f"{x * 17.5},{33.3 * mn - nm}"  # redy
     elif round(abs(y)) == 3:  # 13.5
-        return f"{x * 17.5},{47.75 * mn - nm}"
+        return f"{x * 17.5},{46.7 * mn - nm}"  # redy
     elif round(abs(y)) == 4:  # 11.5
-        return f"{x * 17.5},{58.28 * mn - nm}"
+        return f"{x * 17.5},{57.46 * mn - nm}"  # redy
     elif round(abs(y)) == 5:  # 8
-        return f"{x * 17.5},{66.4 * mn - nm}"
+        return f"{x * 17.5},{65.8 * mn - nm}"  # redy
     elif round(abs(y)) == 6:  # 6.1
-        return f"{x * 17.5},{72.53 * mn - nm}"
+        return f"{x * 17.5},{72.07 * mn - nm}"  # redy
     elif round(abs(y)) == 7:  # 4.55
-        return f"{x * 17.5},{77.095 * mn - nm}"
+        return f"{x * 17.5},{76.755 * mn - nm}"  # redy
     elif round(abs(y)) == 8:  # 3.37
-        return f"{x * 17.5},{80.52 * mn - nm}"
+        return f"{x * 17.5},{80.23 * mn - nm}"  # redy
     elif round(abs(y)) == 9:  # ~2
-        return f"{x * 17.5},{83 * mn - nm}"
+        return f"{x * 17.5},{82.8 * mn - nm}"  #
     elif round(abs(y)) == 10:  #
         return f"{x * 17.5},{84.67715 * mn - nm}"
     elif round(abs(y)) != 5:  # 5.5
@@ -103,8 +103,8 @@ class Map(Widget):
         self.coord_[1] -= y
         if self.coord_[1] > 7905:
             self.coord_[1] = 7905
-        elif self.coord_[1] < 0:
-            self.coord_[1] = 0
+        elif self.coord_[1] < 550:
+            self.coord_[1] = 550
         if self.test:
             print(self.coord_)
 
@@ -117,7 +117,7 @@ class Map(Widget):
             "z": "5",
             "size": "400,400"
         }
-        self.app.add_thread(LoadChunk(api_server, params, self.add_chunk, (x * 10, y * 10)))
+        self.app.add_thread(LoadChunk(api_server, params, self.add_chunk, (x * 10, y * 10, self.mod)))
 
     def get_point(self, coord):
         pass
@@ -152,7 +152,7 @@ class Map(Widget):
         self.set_image(image)
 
     def add_chunk(self, request, coord):
-        if request.status_code == 200:
+        if request.status_code == 200 and self.mod == coord[2]:
             if self.test:
                 print(coord[0] // self.step)
                 print(coord[0] // self.step * self.size_image[0] + 10)

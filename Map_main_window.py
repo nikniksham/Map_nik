@@ -29,7 +29,7 @@ params = {
     "size": "400,400"
 }
 
-map = Map((0, 7905))
+map = Map((4000, 6005))
 application.add_widget(map, 0)
 # x
 # min 0
