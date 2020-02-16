@@ -221,13 +221,13 @@ class Slider(Widget):
         self.set_image(image)
 
     def get_value(self):
-        return abs(self.coord_slider[1] - self.app.get_size(0, self.coord_button[1])[1] - 10) / 250
+        return abs(self.coord_slider[1] - self.app.get_size(0, self.coord_button[1])[1] - 10) / self.height_slider
 
     def update(self, event):
         if event.type in [pygame.MOUSEBUTTONDOWN, pygame.MOUSEMOTION] and self.app.mouse_pressed(1):
             self.set_pressed()
             if self.get_active():
-                self.get_value()
+                self.app.map.set_zoom(self.get_value())
                 self.generate_image()
 
 
