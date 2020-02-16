@@ -131,7 +131,7 @@ class Map(Widget):
         count = 0
         map_ = self.map.copy()
         print("coord:", coord[0] // self.size_image[0], coord[1] // self.size_image[1])
-        for y in range(coord[1] // self.size_image[1] - 1, (coord[1] + size[1]) // self.size_image[1]):
+        for y in range(coord[1] // self.size_image[1] - 2, (coord[1] + size[1]) // self.size_image[1]):
             for x in range(coord[0] // self.size_image[0] - 1, (coord[0] + size[0]) // self.size_image[0] + 1):
                 x %= 21
                 y %= 21

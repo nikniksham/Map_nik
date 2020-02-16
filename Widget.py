@@ -704,6 +704,10 @@ class Application:
             # отрисовка экрана
             for widget in self.get_widgets():
                 self.render(widget)
+            if self.threads_break:
+                for i in range(len(self.threads)):
+                    if not self.threads[i].get_status():
+                        self.threads[i].join()
             # отрисовка мыши
             self.draw_mouse()
             # обновление экрана
