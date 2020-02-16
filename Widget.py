@@ -705,9 +705,10 @@ class Application:
             for widget in self.get_widgets():
                 self.render(widget)
             if self.threads_break:
-                for i in range(len(self.threads)):
+                for i in range(len(self.threads), -1, -1):
                     if not self.threads[i].get_status():
                         self.threads[i].join()
+                        self.threads.pop(i)
             # отрисовка мыши
             self.draw_mouse()
             # обновление экрана
