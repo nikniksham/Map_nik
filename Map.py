@@ -14,30 +14,26 @@ def generate_coord(x, y):
     # зум, то есть завтра
     if round(abs(y)) == 0:
         return f"{x * 17.5},{0 * mn - nm}"
-    elif round(abs(y)) == 1:  # 17.3
+    elif round(abs(y)) == 1:  # 17.4
         return f"{x * 17.5},{17.4 * mn - nm}"  # redy
-    elif round(abs(y)) == 2:  # 15.5
+    elif round(abs(y)) == 2:  # 15.9
         return f"{x * 17.5},{33.3 * mn - nm}"  # redy
-    elif round(abs(y)) == 3:  # 13.5
+    elif round(abs(y)) == 3:  # 13.4
         return f"{x * 17.5},{46.7 * mn - nm}"  # redy
-    elif round(abs(y)) == 4:  # 11.5
+    elif round(abs(y)) == 4:  # 10.7
         return f"{x * 17.5},{57.46 * mn - nm}"  # redy
-    elif round(abs(y)) == 5:  # 8
+    elif round(abs(y)) == 5:  # 8.34
         return f"{x * 17.5},{65.8 * mn - nm}"  # redy
-    elif round(abs(y)) == 6:  # 6.1
+    elif round(abs(y)) == 6:  # 6.27
         return f"{x * 17.5},{72.07 * mn - nm}"  # redy
-    elif round(abs(y)) == 7:  # 4.55
+    elif round(abs(y)) == 7:  # 4.7
         return f"{x * 17.5},{76.755 * mn - nm}"  # redy
-    elif round(abs(y)) == 8:  # 3.37
+    elif round(abs(y)) == 8:  # 3.48
         return f"{x * 17.5},{80.23 * mn - nm}"  # redy
-    elif round(abs(y)) == 9:  # ~2
+    elif round(abs(y)) == 9:  # 2.57
         return f"{x * 17.5},{82.8 * mn - nm}"  #
-    elif round(abs(y)) == 10:  #
+    elif round(abs(y)) == 10:  # 1.87
         return f"{x * 17.5},{84.67715 * mn - nm}"
-    elif round(abs(y)) != 5:  # 5.5
-        return f"{x * 17.5},{64 * mn - nm}"
-    else:
-        return f"{x},{y * 16}"
 
 
 def get_spn(y):
