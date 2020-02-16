@@ -39,8 +39,8 @@ application.add_widget(map, 0)
 # y
 # min 0
 # max 7905 
-for y in range(-2, 3):
-    for x in range(-2, 3):
+for y in range(-10, 11):
+    for x in range(-10, 11):
         params["ll"] = generate_coord(x, y)
         params['spn'] = get_spn(y)
         map.add_chunk(requests.get(api_server, params=params), ((x + 10) * 10, (y + 10) * 10))
