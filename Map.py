@@ -59,7 +59,7 @@ class Map(Widget):
     def __init__(self, pos):
         """виджет карты на весь экран"""
         self.map_image = Surface((100, 100))
-        super().__init__(self.map_image, (0, 0))
+        super().__init__(self.map_image, (0, 0), is_zooming=True, stock=False)
         self.size_image = (400, 400)
         self.map = {}
         self.step = 10
@@ -80,8 +80,17 @@ class Map(Widget):
     def add_mod(self, mod):
         """Ожидается RadioButtons чтобы получить режим карты"""
         self.mods = mod
-        if self.mods == None:
-            pass
+        if self.update_mod():
+            self.generate_image()
+
+    def update_mod(self):
+        """обновляет режим карты если режим изменился возвращает True иначе False"""
+        if self.mods is not None:
+            if self.mods.get_choice() != self.mod:
+                self.mod = self.mods.get_choice()
+                self.map = {}
+            return self.mods.get_choice() != self.mod
+        return False
 
     def get_step(self):
         return self.step
@@ -116,6 +125,9 @@ class Map(Widget):
                     'size': '500,500'
                 }
                 self.app.add_thread(LoadChunk('http://static-maps.yandex.ru/1.x/', params, self.add_chunk, ll))
+
+    def get_point(self, coord):
+        pass
 
     def generate_image(self):
         self.rect = Rect((0, 0), self.app.screen.get_size())
@@ -166,6 +178,7 @@ class Map(Widget):
             self.generate_image()
         if event.type == pygame.MOUSEBUTTONUP:
             self.pressed = False
+            print("point:", self.coord_[0] + event.pos[0], self.coord_[1] + event.pos[1])
 
 
 if __name__ == '__main__':
