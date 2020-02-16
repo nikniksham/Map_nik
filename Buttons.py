@@ -171,7 +171,7 @@ class TextWidget(Button):
 
 
 class Slider(Widget):
-    def __init__(self, image, coord, min_value, max_value, height_slider, width_slider=10,
+    def __init__(self, image, coord, height_slider, width_slider=10,
                  color_slider=(150, 150, 150)):
         """Кнопка 'Slider'
         Очень полезная вещь, используется для динамичного регулирования параметров
@@ -184,10 +184,6 @@ class Slider(Widget):
         self.radius = image.get_width() // 2
         # координаты кнопки
         self.coord_button = coord
-        # минимальное значение
-        self.min_value = min_value
-        # максимальное значение
-        self.max_value = max_value
         # высота слайдера
         self.height_slider = height_slider
         # ширина слайдера
@@ -224,10 +220,14 @@ class Slider(Widget):
         image.blit(self.image_slider, (0, self.coord_slider[1]))
         self.set_image(image)
 
+    def get_value(self):
+        return abs(self.coord_slider[1] - self.app.get_size(0, self.coord_button[1])[1] - 10) / 250
+
     def update(self, event):
         if event.type in [pygame.MOUSEBUTTONDOWN, pygame.MOUSEMOTION] and self.app.mouse_pressed(1):
             self.set_pressed()
             if self.get_active():
+                self.get_value()
                 self.generate_image()
 
 

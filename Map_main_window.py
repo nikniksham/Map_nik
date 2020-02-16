@@ -20,7 +20,7 @@ push_active = check_image('Widget_image/Button/delet_active.png', color_key=-1)
 push_on = check_image('Widget_image/Button/delet_on.png', color_key=-1)
 push_button = Button([push_off, push_active, push_on], text_widget.delete_text, [0.25, 0], name='delete_button')
 slider_button_image = Smooth([0, 0], [50, 50], 25).generate_smooth()
-slider_button = Slider(slider_button_image, [-0.005, 0.3], 0, 1, 300, color_slider=(200, 200, 50))
+slider_button = Slider(slider_button_image, [-0.005, 0.3], 300, color_slider=(200, 200, 50))
 api_server = "http://static-maps.yandex.ru/1.x/"
 print('generate')
 params = {
@@ -39,8 +39,8 @@ application.add_widget(map, 0)
 # y
 # min 0
 # max 7905 
-for y in range(-10, 11):
-    for x in range(-10, 11):
+for y in range(-2, 3):
+    for x in range(-2, 3):
         params["ll"] = generate_coord(x, y)
         params['spn'] = get_spn(y)
         map.add_chunk(requests.get(api_server, params=params), ((x + 10) * 10, (y + 10) * 10))
