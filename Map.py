@@ -68,11 +68,20 @@ class Map(Widget):
         self.pressed = False
         self.last_pos = None
         self.test = False
+        self.size_chunk = (8230, 7905)
+        self.mod = 'map'
+        self.mods = None
         if self.test:
             print(self.rect)
 
     def get_pos(self, x, y):
         return int(x - self.coord_[0]), int(self.coord_[1] - y)
+
+    def add_mod(self, mod):
+        """Ожидается RadioButtons чтобы получить режим карты"""
+        self.mods = mod
+        if self.mods == None:
+            pass
 
     def get_step(self):
         return self.step
@@ -81,7 +90,12 @@ class Map(Widget):
         if self.test:
             print(self.coord_, x, y)
         self.coord_[0] += x
+        self.coord_[0] %= 8230
         self.coord_[1] -= y
+        if self.coord_[1] > 7905:
+            self.coord_[1] = 7905
+        elif self.coord_[1] < 0:
+            self.coord_[1] = 0
         if self.test:
             print(self.coord_)
 
@@ -106,12 +120,28 @@ class Map(Widget):
     def generate_image(self):
         self.rect = Rect((0, 0), self.app.screen.get_size())
         image = Surface(self.app.get_size(1, 1))
+        res = []
+        coord = self.coord_[:]
+        size = self.app.screen.get_size()
+        count = 0
+        print("coord:", coord[0] // self.size_image[0], coord[1] // self.size_image[1])
+        for y in range(coord[1] // self.size_image[1], (coord[1] + size[1]) // self.size_image[1] + 1):
+            for x in range(coord[0] // self.size_image[0], (coord[0] + size[0]) // self.size_image[0] + 1):
+                x %= 21
+                y %= 21
+                try:
+                    res.append(((x * self.size_image[0], y * self.size_image[1]), self.map[(x * self.size_image[0], y * self.size_image[1])]))
+                    count += 1
+                except Exception:
+                    print(x, y)
+        print(count)
         for key, val in self.map.items():
             if self.test:
                 print(key, val)
                 print(self.get_pos(*key), 'gg')
             # pygame.image.save(val, 'gg.png')
             image.blit(val, self.get_pos(*key))
+            image.blit(val, (self.get_pos(*key)[0] + 8230, self.get_pos(*key)[1]))
         self.set_image(image)
 
     def add_chunk(self, request, coord):
@@ -131,6 +161,8 @@ class Map(Widget):
         if event.type == pygame.MOUSEMOTION and self.pressed and self.app.mouse_pressed(1) and self.get_active():
             self.move_at(self.last_pos[0] - event.pos[0], self.last_pos[1] - event.pos[1])
             self.last_pos = event.pos
+            if self.test:
+                print(self.coord_)
             self.generate_image()
         if event.type == pygame.MOUSEBUTTONUP:
             self.pressed = False

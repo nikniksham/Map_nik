@@ -31,13 +31,19 @@ params = {
     "size": "400,400"
 }
 
-map = Map((int(22.0 / 10 * 600), int(22.0 // 10 * 450 + 400)))
+map = Map((4000, 4000))
 application.add_widget(map, 0)
+# x
+# min 0
+# max 8230
+# y
+# min 0
+# max 7905 
 for y in range(-10, 11):
     for x in range(-10, 11):
         params["ll"] = generate_coord(x, y)
         params['spn'] = get_spn(y)
-        map.add_chunk(requests.get(api_server, params=params), (x * 10, y * 10))
+        map.add_chunk(requests.get(api_server, params=params), ((x + 10) * 10, (y + 10) * 10))
 map.generate_image()
 application.add_widget(map, 0)
 create = False
