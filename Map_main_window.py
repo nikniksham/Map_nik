@@ -46,11 +46,11 @@ if create:
         image.blit(TextBox(30, '', color=(10, 10, 10)).get_image(), [42, 7])
         pygame.image.save(image, f'map{name_image[i]}')
 sat_radio_button = RadioButton(['Widget_image/Button/sat_off.png', 'Widget_image/Button/sat_active.png',
-                                'Widget_image/Button/sat_on.png'], None, (0.10, 0.94), 'sat')
+                                'Widget_image/Button/sat_on.png'], None, (0.8, 0), 'sat')
 map_radio_button = RadioButton(['Widget_image/Button/map_off.png', 'Widget_image/Button/map_active.png',
-                                'Widget_image/Button/map_on.png'], None, (0.01, 0.94), 'map')
+                                'Widget_image/Button/map_on.png'], None, (0.7, 0), 'map')
 sat_skl_radio_button = RadioButton(['Widget_image/Button/sat_skl_off.png', 'Widget_image/Button/sat_skl_active.png',
-                                    'Widget_image/Button/sat_skl_on.png'], None, (0.19, 0.94), 'sat,skl')
+                                    'Widget_image/Button/sat_skl_on.png'], None, (0.9, 0), 'sat,skl')
 radio_list = RadioButtons([sat_radio_button, map_radio_button, sat_skl_radio_button])
 map.add_mod(radio_list)
 map_radio_button.s_p()

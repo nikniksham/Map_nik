@@ -237,7 +237,7 @@ class RadioButtons:
         for b in buttons:
             b.set_radio_list(self)
             self.buttons.append(b)
-        self.choice = None
+        self.choice = 'map'
 
     def add_button(self, button):
         """Добавляет кнопки в список"""

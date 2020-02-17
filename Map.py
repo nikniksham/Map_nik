@@ -7,7 +7,6 @@ from WEB_requests import LoadChunk
 
 
 def generate_coord(x, y):
-    print(y)
     mn = 1 if y > 0 else -1
     nm = 0 if y <= 0 else 0
     # Коменты не актуальны, кстати, надо будет сделать более точное размещение, но это только тогда, когда будет норм
@@ -67,8 +66,8 @@ class Map(Widget):
         self.size_chunk = (8230, 7905)
         self.mod = 'sat,skl'
         self.mods = None
-        if self.test:
-            print(self.rect)
+        # if self.test:
+            # print(self.rect)
 
     def get_pos(self, x, y):
         return int(x - self.coord_[0]), int(self.coord_[1] - y)
@@ -126,18 +125,18 @@ class Map(Widget):
         size = self.app.screen.get_size()
         count = 0
         map_ = self.map.copy()
-        print("coord:", coord[0] // self.size_image[0], coord[1] // self.size_image[1])
+        # print("coord:", coord[0] // self.size_image[0], coord[1] // self.size_image[1])
         for y in range(coord[1] // self.size_image[1] - 2, (coord[1] + size[1]) // self.size_image[1]):
             for x in range(coord[0] // self.size_image[0] - 1, (coord[0] + size[0]) // self.size_image[0] + 1):
                 x %= 21
                 y %= 21
                 try:
-                    print(x, y)
+                    # print(x, y)
                     res.append(((x * self.size_image[0], y * self.size_image[1]), map_[(x * self.size_image[0], y * self.size_image[1])]))
                     count += 1
                 except Exception:
                     self.load_map(x, y)
-        print(count)
+        # print(count)
         for key, val in res:
             if self.test:
                 print(key, val)
@@ -149,9 +148,9 @@ class Map(Widget):
 
     def add_chunk(self, request, coord):
         if request.status_code == 200 and self.mod == coord[2]:
-            if self.test:
-                print(coord[0] // self.step)
-                print(coord[0] // self.step * self.size_image[0] + 10)
+            # if self.test:
+                # print(coord[0] // self.step)
+                # print(coord[0] // self.step * self.size_image[0] + 10)
             coord = coord[0] // self.step * self.size_image[0], coord[1] // self.step * (self.size_image[1] + 0)
             self.map[coord] = image.load(BytesIO(request.content))
         else:
@@ -166,12 +165,12 @@ class Map(Widget):
         if event.type == pygame.MOUSEMOTION and self.pressed and self.app.mouse_pressed(1) and self.get_active():
             self.move_at(self.last_pos[0] - event.pos[0], self.last_pos[1] - event.pos[1])
             self.last_pos = event.pos
-            if self.test:
-                print(self.coord_)
+            # if self.test:
+                # print(self.coord_)
             self.generate_image()
         if event.type == pygame.MOUSEBUTTONUP:
             self.pressed = False
-            print("point:", self.coord_[0] + event.pos[0], self.coord_[1] + event.pos[1])
+            # print("point:", self.coord_[0] + event.pos[0], self.coord_[1] + event.pos[1])
 
 
 if __name__ == '__main__':

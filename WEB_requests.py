@@ -9,6 +9,7 @@ class WebLoad(ThreadApp):
         params - параметры для запроса
         res_to - функциюкоторую надо будет вызвать после завершения запроса"""
         Thread.__init__(self)
+        self.status = True
         self.url = url
         self.params = params
         self.res_to = res_to

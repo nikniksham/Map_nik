@@ -573,11 +573,15 @@ class Application:
     def add_thread(self, thread):
         """добавить поток"""
         if issubclass(type(thread), ThreadApp):
-            self.threads.append(thread)
-            thread.add_app(self)
-            thread.start()
+            if len(self.threads) <= 100:
+                self.threads.append(thread)
+                thread.add_app(self)
+                thread.start()
+            else:
+                print('Я умер')
+                self.threads = []
         else:
-            raise Exception(f"ThreadErr: thread is not is subclass ThreadApp")
+            raise Exception(f"ThreadErr: thread is not is subclass ThreadApp or can't add thread")
 
     def remove(self, thread):
         """удалить поток"""
@@ -665,6 +669,7 @@ class Application:
                 for widget in self.get_widgets(reverse=True):
                     if widget.get_active():
                         widget.update(Event('buttons'))
+            # print(len(self.threads), 'thread')
             # обробатываем события
             for event in pygame.event.get():
                 # событие закрытия
@@ -704,8 +709,9 @@ class Application:
             # отрисовка экрана
             for widget in self.get_widgets():
                 self.render(widget)
+            self.threads_break = True
             if self.threads_break:
-                for i in range(len(self.threads), -1, -1):
+                for i in range(len(self.threads) - 1, -1, -1):
                     if not self.threads[i].get_status():
                         self.threads[i].join()
                         self.threads.pop(i)
