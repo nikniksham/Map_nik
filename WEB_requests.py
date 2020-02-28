@@ -11,6 +11,7 @@ class WebLoad(ThreadApp):
         Thread.__init__(self)
         self.status = True
         self.url = url
+        self.status = True
         self.params = params
         self.res_to = res_to
 
@@ -43,7 +44,3 @@ class LoadChunk(WebLoad):
         self.res = None
         return (res, self.coord)
 
-
-class LoadMap(ThreadApp):
-    def __init__(self, map_widget):
-        pass

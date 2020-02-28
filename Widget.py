@@ -573,7 +573,7 @@ class Application:
     def add_thread(self, thread):
         """добавить поток"""
         if issubclass(type(thread), ThreadApp):
-            if len(self.threads) <= 100:
+            if len(self.threads) <= 40:
                 self.threads.append(thread)
                 thread.add_app(self)
                 thread.start()

@@ -8,34 +8,37 @@ from WEB_requests import LoadChunk
 
 def generate_coord(x, y):
     mn = 1 if y > 0 else -1
-    nm = 0 if y <= 0 else 0
     # Коменты не актуальны, кстати, надо будет сделать более точное размещение, но это только тогда, когда будет норм
     # зум, то есть завтра
-    if round(abs(y)) == 0:
-        return f"{x * 17.5},{0 * mn - nm}"
-    elif round(abs(y)) == 1:  # 17.4
-        return f"{x * 17.5},{17.4 * mn - nm}"  # redy
-    elif round(abs(y)) == 2:  # 15.9
-        return f"{x * 17.5},{33.3 * mn - nm}"  # redy
-    elif round(abs(y)) == 3:  # 13.4
-        return f"{x * 17.5},{46.7 * mn - nm}"  # redy
-    elif round(abs(y)) == 4:  # 10.7
-        return f"{x * 17.5},{57.46 * mn - nm}"  # redy
-    elif round(abs(y)) == 5:  # 8.34
-        return f"{x * 17.5},{65.8 * mn - nm}"  # redy
-    elif round(abs(y)) == 6:  # 6.27
-        return f"{x * 17.5},{72.07 * mn - nm}"  # redy
-    elif round(abs(y)) == 7:  # 4.7
-        return f"{x * 17.5},{76.755 * mn - nm}"  # redy
-    elif round(abs(y)) == 8:  # 3.48
-        return f"{x * 17.5},{80.23 * mn - nm}"  # redy
-    elif round(abs(y)) == 9:  # 2.57
-        return f"{x * 17.5},{82.8 * mn - nm}"  #
-    elif round(abs(y)) == 10:  # 1.87
-        return f"{x * 17.5},{84.67715 * mn - nm}"
+    y = round(abs(y))
+    x //= 10
+    x_, y_ = x * 17.5, 0
+    delt = [17.4, 15.9, 13.4, 10.7, 8.34, 6.27, 4.7, 3.48, 2.57, 1.87]
+    if y > 0:  # 17.4
+        y_ += delt[0] if y >= 10 else delt[0] * (y / 10)
+    if y > 10:  # 15.9
+        y_ += delt[1] if y >= 20 else delt[1] * ((y - 10) / 10)
+    if y > 20:  # 13.4
+        y_ += delt[2] if y >= 30 else delt[2] * ((y - 20) / 10)
+    if y > 30:  # 10.7
+        y_ += delt[3] if y >= 40 else delt[3] * ((y - 30) / 10)
+    if y > 40:  # 8.34
+        y_ += delt[4] if y >= 50 else delt[4] * ((y - 40) / 10)
+    if y > 50:  # 6.27
+        y_ += delt[5] if y >= 60 else delt[5] * ((y - 50) / 10)
+    if y > 60:  # 4.7
+        y_ += delt[6] if y >= 70 else delt[6] * ((y - 60) / 10)
+    if y > 70:  # 3.48
+        y_ += delt[7] if y >= 80 else delt[7] * ((y - 70) / 10)
+    if y > 80:  # 2.57
+        y_ += delt[8] if y >= 90 else delt[8] * ((y - 80) / 10)
+    if y > 90:  # 1.87
+        y_ += delt[9] if y >= 100 else delt[9] * ((y - 90) / 10)
+    return f'{x_},{round(y_ * mn, 3)}'
 
 
 def get_spn(y):
+    # какято фигня
     if abs(y) <= 3:
         return f"{10},{10}"
     elif abs(y) == 4:
@@ -67,7 +70,7 @@ class Map(Widget):
         self.mod = 'sat,skl'
         self.mods = None
         # if self.test:
-            # print(self.rect)
+        # print(self.rect)
 
     def get_pos(self, x, y):
         return int(x - self.coord_[0]), int(self.coord_[1] - y)
@@ -106,10 +109,10 @@ class Map(Widget):
     def load_map(self, x, y):
         api_server = "http://static-maps.yandex.ru/1.x/"
         params = {
-            "ll": generate_coord(x - 10, y - 10),
+            "ll": generate_coord((x - 10) * 10, (y - 10) * 10),
             'spn': get_spn(y - 10),
             "l": self.mod,
-            "z": "5",
+            "z": "1",
             "size": "400,400"
         }
         self.app.add_thread(LoadChunk(api_server, params, self.add_chunk, (x * 10, y * 10, self.mod)))
@@ -132,7 +135,8 @@ class Map(Widget):
                 y %= 21
                 try:
                     # print(x, y)
-                    res.append(((x * self.size_image[0], y * self.size_image[1]), map_[(x * self.size_image[0], y * self.size_image[1])]))
+                    res.append(((x * self.size_image[0], y * self.size_image[1]),
+                                map_[(x * self.size_image[0], y * self.size_image[1])]))
                     count += 1
                 except Exception:
                     self.load_map(x, y)
@@ -149,12 +153,13 @@ class Map(Widget):
     def add_chunk(self, request, coord):
         if request.status_code == 200 and self.mod == coord[2]:
             # if self.test:
-                # print(coord[0] // self.step)
-                # print(coord[0] // self.step * self.size_image[0] + 10)
+            # print(coord[0] // self.step)
+            # print(coord[0] // self.step * self.size_image[0] + 10)
             coord = coord[0] // self.step * self.size_image[0], coord[1] // self.step * (self.size_image[1] + 0)
             self.map[coord] = image.load(BytesIO(request.content))
         else:
-            raise Exception(f"Что-то пошло не так, проверьте соеденинение с интернетом. Ошибка: {request.status_code}.\n{request.url}")
+            raise Exception(
+                f"Что-то пошло не так, проверьте соеденинение с интернетом. Ошибка: {request.status_code}.\n{request.url}")
 
     def update(self, event):
         if self.update_mod():
@@ -166,7 +171,7 @@ class Map(Widget):
             self.move_at(self.last_pos[0] - event.pos[0], self.last_pos[1] - event.pos[1])
             self.last_pos = event.pos
             # if self.test:
-                # print(self.coord_)
+            # print(self.coord_)
             self.generate_image()
         if event.type == pygame.MOUSEBUTTONUP:
             self.pressed = False
@@ -174,8 +179,5 @@ class Map(Widget):
 
 
 if __name__ == '__main__':
-    app = Application((500, 500))
-    map = Map((int(22.0 / 10 * 600), int(22.0 // 10 * 450 + 400)))
-    app.add_widget(map)
-    map.generate_image()
-    app.run()
+    for y in range(-100, 101, 10):
+        print(generate_coord(0, y))
