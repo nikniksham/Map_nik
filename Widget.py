@@ -578,7 +578,6 @@ class Application:
                 thread.add_app(self)
                 thread.start()
             else:
-                print('Я умер')
                 self.threads = []
         else:
             raise Exception(f"ThreadErr: thread is not is subclass ThreadApp or can't add thread")
