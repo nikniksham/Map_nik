@@ -344,7 +344,7 @@ class Widget:
         self.image = scale(self.image, (self.image_orig.get_width(), self.image_orig.get_height()))
         if self.size is not None:
             self.image = scale_to(self.image, self.size)
-        print(self.image.get_rect())
+        # print(self.image.get_rect())
         self.rect.width, self.rect.height = self.image.get_size()
         if self.app is not None:
             self.set_position()

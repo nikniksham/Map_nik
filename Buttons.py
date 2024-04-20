@@ -238,6 +238,10 @@ class RadioButtons:
             b.set_radio_list(self)
             self.buttons.append(b)
         self.choice = 'map'
+        self.map = None
+
+    def set_map(self, map):
+        self.map = map
 
     def add_button(self, button):
         """Добавляет кнопки в список"""
@@ -279,6 +283,9 @@ class RadioButton(Button):
         if self.radio_list is not None:
             if self.radio_list.get_choice() != self.choice:
                 self.radio_list.set_choice(self.choice)
+                if self.radio_list and self.radio_list.map:
+                    self.radio_list.map.update_mod()
+                    # self.radio_list.map.generate_image()
         else:
             raise Exception('Эта кнопка не относится к списку радио кнопок')
 

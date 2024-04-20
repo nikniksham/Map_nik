@@ -1,3 +1,5 @@
+import random
+
 import requests
 from pygame import Surface, image, Rect
 import pygame
@@ -56,7 +58,7 @@ def get_spn(y):
 class Map(Widget):
     def __init__(self, pos):
         """виджет карты на весь экран"""
-        self.map_image = Surface((100, 100))
+        self.map_image = Surface((1000, 800))
         super().__init__(self.map_image, (0, 0), is_zooming=True, stock=False)
         self.size_image = (400, 400)
         self.map = {}
@@ -69,6 +71,8 @@ class Map(Widget):
         self.size_chunk = (8230, 7905)
         self.mod = 'sat,skl'
         self.mods = None
+        self.firstRender = True
+        self.chunks = []
         # if self.test:
         # print(self.rect)
 
@@ -80,6 +84,7 @@ class Map(Widget):
         self.mods = mod
         if self.update_mod():
             self.generate_image()
+        self.mods.set_map(self)
 
     def update_mod(self):
         """обновляет режим карты если режим изменился возвращает True иначе False"""
@@ -87,6 +92,7 @@ class Map(Widget):
             if self.mods.get_choice() != self.mod and self.mods.get_choice() is not None:
                 self.mod = self.mods.get_choice()
                 self.map = {}
+                self.generate_image()
             return self.mods.get_choice() != self.mod
         return False
 
@@ -120,9 +126,8 @@ class Map(Widget):
     def get_point(self, coord):
         pass
 
-    def generate_image(self):
+    def generate_image(self, load_new_chunks=True):
         self.rect = Rect((0, 0), self.app.screen.get_size())
-        image = Surface(self.app.get_size(1, 1))
         res = []
         coord = self.coord_[:]
         size = self.app.screen.get_size()
@@ -135,13 +140,18 @@ class Map(Widget):
                 y %= 21
                 try:
                     # print(x, y)
-                    res.append(((x * self.size_image[0], y * self.size_image[1]),
-                                map_[(x * self.size_image[0], y * self.size_image[1])]))
+                    res.append(((x * self.size_image[0], y * self.size_image[1]), map_[(x * self.size_image[0], y * self.size_image[1])]))
                     count += 1
                 except Exception:
-                    self.load_map(x, y)
+                    if load_new_chunks:
+                        self.load_map(x, y)
         # print(count)
-        for key, val in res:
+        self.chunks = res
+        self.draw_chunks()
+
+    def draw_chunks(self):
+        image = Surface(self.app.get_size(1, 1))
+        for key, val in self.chunks:
             if self.test:
                 print(key, val)
                 print(self.get_pos(*key), 'gg')
@@ -157,11 +167,15 @@ class Map(Widget):
             # print(coord[0] // self.step * self.size_image[0] + 10)
             coord = coord[0] // self.step * self.size_image[0], coord[1] // self.step * (self.size_image[1] + 0)
             self.map[coord] = image.load(BytesIO(request.content))
+            self.generate_image(False)
         else:
             raise Exception(
                 f"Что-то пошло не так, проверьте соеденинение с интернетом. Ошибка: {request.status_code}.\n{request.url}")
 
     def update(self, event):
+        if self.firstRender:
+            self.firstRender = False
+            self.generate_image()
         if self.update_mod():
             self.generate_image()
         if event.type == pygame.MOUSEBUTTONDOWN:
