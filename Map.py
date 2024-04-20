@@ -167,15 +167,12 @@ class Map(Widget):
             # print(coord[0] // self.step * self.size_image[0] + 10)
             coord = coord[0] // self.step * self.size_image[0], coord[1] // self.step * (self.size_image[1] + 0)
             self.map[coord] = image.load(BytesIO(request.content))
-            self.generate_image(False)
         else:
             raise Exception(
                 f"Что-то пошло не так, проверьте соеденинение с интернетом. Ошибка: {request.status_code}.\n{request.url}")
 
     def update(self, event):
-        if self.firstRender:
-            self.firstRender = False
-            self.generate_image()
+        self.generate_image()
         if self.update_mod():
             self.generate_image()
         if event.type == pygame.MOUSEBUTTONDOWN:
